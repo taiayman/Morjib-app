@@ -12,8 +12,16 @@ import 'package:business_management_app/screens/project_details_screen.dart';
 import 'package:business_management_app/screens/report_issue_screen.dart';
 import 'package:business_management_app/screens/send_notification_screen.dart';
 import 'package:business_management_app/widgets/project_card.dart';
+import 'package:business_management_app/utils/theme.dart';
+import 'package:business_management_app/screens/profile_screen.dart';
+import 'package:business_management_app/services/auth_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CEODashboard extends StatefulWidget {
+  final bool isDarkTheme;
+
+  CEODashboard({required this.isDarkTheme});
+
   @override
   _CEODashboardState createState() => _CEODashboardState();
 }
@@ -22,46 +30,90 @@ class _CEODashboardState extends State<CEODashboard> {
   final CompanyService _companyService = CompanyService();
   final ProjectService _projectService = ProjectService();
   final UserService _userService = UserService();
+  final AuthService _authService = AuthService();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
+
   List<Project> _projects = [];
   Company? _selectedCompany;
   AppUser.User? _user;
+  bool _isDarkTheme = false;
 
   @override
   void initState() {
     super.initState();
+    _isDarkTheme = widget.isDarkTheme;
     _loadUserAndCompany();
   }
 
   Future<void> _loadUserAndCompany() async {
-    AppUser.User? user = await _userService.getCurrentUser();
-    setState(() {
-      _user = user;
-    });
+    try {
+      AppUser.User? user = await _userService.getCurrentUser();
+      if (user == null || user.companyId.isEmpty) {
+        throw Exception("User or company ID not found.");
+      }
 
-    if (user != null && user.companyId.isNotEmpty) {
+      print('User company ID: ${user.companyId}');
+      setState(() {
+        _user = user;
+      });
+
       Company company = await _companyService.getCompanyById(user.companyId);
       setState(() {
         _selectedCompany = company;
       });
 
       _loadProjects(company.id);
+    } catch (e) {
+      print('Error loading user and company: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('There was an error loading your data. Please try again later.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
   Future<void> _loadProjects(String companyId) async {
-    List<Project> projects = await _projectService.getProjectsForCompany(companyId);
-    setState(() {
-      _projects = projects;
-    });
+    try {
+      List<Project> projects = await _projectService.getProjectsForCompany(companyId);
+      setState(() {
+        _projects = projects;
+      });
+    } catch (e) {
+      print('Error loading projects: $e');
+    }
+  }
+
+  void _deleteProject(String projectId) async {
+    await _projectService.deleteProject(projectId);
+    _loadProjects(_selectedCompany!.id);
+  }
+
+  void _logout() async {
+    await _authService.logout();
+    await _storage.delete(key: 'userToken');
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF2F0E8),
+      backgroundColor: appTheme(_isDarkTheme).backgroundColor,
       appBar: AppBar(
-        title: Text('CEO Dashboard', style: GoogleFonts.rubik()),
-        backgroundColor: Color(0xFFD97757),
+        title: Text('CEO Dashboard'),
+        backgroundColor: appTheme(_isDarkTheme).primaryColor,
         actions: [
           IconButton(
             icon: Icon(Icons.account_circle),
@@ -71,9 +123,7 @@ class _CEODashboardState extends State<CEODashboard> {
           ),
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () {
-              // Handle logout
-            },
+            onPressed: _logout,
           ),
         ],
       ),
@@ -90,15 +140,19 @@ class _CEODashboardState extends State<CEODashboard> {
           ? FloatingActionButton(
               onPressed: () {
                 if (_selectedCompany != null) {
-                  Navigator.pushNamed(
+                  Navigator.push(
                     context,
-                    '/add_project',
-                    arguments: _selectedCompany!.id,
+                    MaterialPageRoute(
+                      builder: (context) => AddProjectScreen(
+                        companyId: _selectedCompany!.id,
+                        companyName: _selectedCompany!.name,
+                      ),
+                    ),
                   ).then((value) => _loadProjects(_selectedCompany!.id));
                 }
               },
-              backgroundColor: Color(0xFFD97757),
-              child: Icon(Icons.add),
+              backgroundColor: appTheme(_isDarkTheme).primaryColor,
+              child: Icon(Icons.add, color: Colors.white),
             )
           : null,
     );
@@ -119,11 +173,11 @@ class _CEODashboardState extends State<CEODashboard> {
             children: [
               Text(
                 _user?.name ?? 'Unknown',
-                style: GoogleFonts.rubik(fontSize: 20, fontWeight: FontWeight.bold),
+                style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               Text(
                 'the CEO of ${_selectedCompany?.name ?? 'no company selected'}',
-                style: GoogleFonts.rubik(fontSize: 16, color: Colors.grey),
+                style: GoogleFonts.nunito(fontSize: 16, color: Colors.grey),
               ),
             ],
           ),
@@ -141,7 +195,12 @@ class _CEODashboardState extends State<CEODashboard> {
             if (_selectedCompany != null) {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AddProjectScreen(companyId: _selectedCompany!.id)),
+                MaterialPageRoute(
+                  builder: (context) => AddProjectScreen(
+                    companyId: _selectedCompany!.id,
+                    companyName: _selectedCompany!.name,
+                  ),
+                ),
               ).then((value) => _loadProjects(_selectedCompany!.id));
             }
           }, Icons.add),
@@ -152,10 +211,15 @@ class _CEODashboardState extends State<CEODashboard> {
             );
           }, Icons.report),
           _buildActionButton('Send a notification', () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SendNotificationScreen()),
-            );
+            if (_user != null && _selectedCompany != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SendNotificationScreen(
+                  ceoName: _user!.name,
+                  companyName: _selectedCompany!.name,
+                )),
+              );
+            }
           }, Icons.notification_add),
         ],
       ),
@@ -167,9 +231,9 @@ class _CEODashboardState extends State<CEODashboard> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFFD97757),
+          backgroundColor: appTheme(_isDarkTheme).primaryColor,
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          textStyle: GoogleFonts.rubik(fontSize: 18),
+          textStyle: GoogleFonts.nunito(fontSize: 18),
         ),
         onPressed: onPressed,
         child: Row(
@@ -191,7 +255,7 @@ class _CEODashboardState extends State<CEODashboard> {
           padding: const EdgeInsets.all(16.0),
           child: Text(
             'Projects',
-            style: GoogleFonts.rubik(fontSize: 24, fontWeight: FontWeight.bold),
+            style: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
         _buildProjectsList(),
@@ -200,31 +264,39 @@ class _CEODashboardState extends State<CEODashboard> {
   }
 
   Widget _buildProjectsList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: _projects.length,
-      itemBuilder: (context, index) {
-        return ProjectCard(
-          project: _projects[index],
-          onView: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProjectDetailsScreen(project: _projects[index]),
-              ),
-            );
-          },
-          onUpdate: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EditProjectScreen(project: _projects[index]),
-              ),
-            ).then((value) => _loadProjects(_selectedCompany!.id));
-          },
-        );
-      },
+    return Container(
+      height: 400,
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: _projects.length,
+        itemBuilder: (context, index) {
+          return ProjectCard(
+            project: _projects[index],
+            onView: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailsScreen(
+                    project: _projects[index],
+                    isDarkTheme: _isDarkTheme,
+                  ),
+                ),
+              );
+            },
+            onUpdate: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProjectScreen(project: _projects[index]),
+                ),
+              ).then((value) => _loadProjects(_selectedCompany!.id));
+            },
+            onDelete: () {
+              _deleteProject(_projects[index].id);
+            },
+          );
+        },
+      ),
     );
   }
 }

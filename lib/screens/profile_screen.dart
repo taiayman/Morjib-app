@@ -63,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFF2F0E8),
       appBar: AppBar(
-        title: Text('Profile', style: GoogleFonts.rubik()),
+        title: Text('Profile', style: GoogleFonts.nunito()),
         backgroundColor: Color(0xFFD97757),
       ),
       body: Padding(
@@ -82,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFD97757),
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  textStyle: GoogleFonts.rubik(fontSize: 18),
+                  textStyle: GoogleFonts.nunito(fontSize: 18),
                 ),
                 child: Text('Save', style: TextStyle(color: Colors.white)),
               ),
@@ -99,10 +99,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: TextField(
         controller: controller,
         readOnly: readOnly,
-        style: GoogleFonts.rubik(),
+        style: GoogleFonts.nunito(),
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: GoogleFonts.rubik(),
+          labelStyle: GoogleFonts.nunito(),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),

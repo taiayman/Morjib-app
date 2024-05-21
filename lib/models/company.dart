@@ -9,6 +9,7 @@ class Company {
   final int employeeCount;
   final List<String> projects;
   final String statusColor;
+  final String imageUrl;
 
   Company({
     required this.id,
@@ -21,20 +22,22 @@ class Company {
     required this.employeeCount,
     required this.projects,
     required this.statusColor,
+    required this.imageUrl,
   });
 
   factory Company.fromMap(Map<String, dynamic> data) {
     return Company(
-      id: data['id'],
-      name: data['name'],
-      ceoId: data['ceoId'],
-      ceoName: data['ceoName'],
-      ceoEmail: data['ceoEmail'],
-      ceoPhone: data['ceoPhone'],
-      ceoWhatsApp: data['ceoWhatsApp'],
-      employeeCount: data['employeeCount'],
-      projects: List<String>.from(data['projects']),
-      statusColor: data['statusColor'],
+      id: data['id'] ?? '',
+      name: data['name'] ?? 'Unnamed Company',
+      ceoId: data['ceoId'] ?? '',
+      ceoName: data['ceoName'] ?? 'Unknown CEO',
+      ceoEmail: data['ceoEmail'] ?? '',
+      ceoPhone: data['ceoPhone'] ?? '',
+      ceoWhatsApp: data['ceoWhatsApp'] ?? '',
+      employeeCount: data['employeeCount'] ?? 0,
+      projects: List<String>.from(data['projects'] ?? []),
+      statusColor: data['statusColor'] ?? 'green',
+      imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/150',
     );
   }
 
@@ -50,6 +53,7 @@ class Company {
       'employeeCount': employeeCount,
       'projects': projects,
       'statusColor': statusColor,
+      'imageUrl': imageUrl,
     };
   }
 }

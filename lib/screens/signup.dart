@@ -80,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFF2F0E8),
       appBar: AppBar(
-        title: Text('Sign Up', style: GoogleFonts.rubik()),
+        title: Text('Sign Up', style: GoogleFonts.nunito()),
         backgroundColor: Color(0xFFD97757),
       ),
       body: Padding(
@@ -101,7 +101,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFD97757),
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  textStyle: GoogleFonts.rubik(fontSize: 18),
+                  textStyle: GoogleFonts.nunito(fontSize: 18),
                 ),
                 child: Text('Sign Up', style: TextStyle(color: Colors.white)),
               ),
@@ -118,10 +118,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
-        style: GoogleFonts.rubik(),
+        style: GoogleFonts.nunito(),
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: GoogleFonts.rubik(),
+          labelStyle: GoogleFonts.nunito(),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
@@ -137,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: DropdownButtonFormField<String>(
         value: _selectedCompanyId.isNotEmpty ? _selectedCompanyId : null,
-        hint: Text('Select Company', style: GoogleFonts.rubik()),
+        hint: Text('Select Company', style: GoogleFonts.nunito()),
         decoration: InputDecoration(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
@@ -148,7 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         items: _companies.map((Company company) {
           return DropdownMenuItem<String>(
             value: company.id,
-            child: Text(company.name, style: GoogleFonts.rubik()),
+            child: Text(company.name, style: GoogleFonts.nunito()),
           );
         }).toList(),
         onChanged: (String? newValue) {

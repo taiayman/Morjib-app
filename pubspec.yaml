@@ -83,6 +83,7 @@ flutter:
   assets:
   - assets/business_manager.png
   - assets/logo.png
+  - assets/manager.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

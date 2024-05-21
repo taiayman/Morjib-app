@@ -6,10 +6,20 @@ class UserService {
   final FirebaseAuthUser.FirebaseAuth _auth = FirebaseAuthUser.FirebaseAuth.instance;
   final CollectionReference _userCollection = FirebaseFirestore.instance.collection('users');
 
-  Future<User> getCurrentUser() async {
-    final firebaseUser = _auth.currentUser!;
-    final userData = await _userCollection.doc(firebaseUser.uid).get();
-    return User.fromMap(userData.data() as Map<String, dynamic>);
+  Future<User?> getCurrentUser() async {
+    try {
+      final firebaseUser = _auth.currentUser!;
+      final userData = await _userCollection.doc(firebaseUser.uid).get();
+      if (userData.exists) {
+        return User.fromMap(userData.data() as Map<String, dynamic>);
+      } else {
+        print('User data not found for ID: ${firebaseUser.uid}');
+        return null;
+      }
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
   }
 
   Future<void> addUser(User user) async {

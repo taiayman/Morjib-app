@@ -1,13 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class InitialScreen extends StatelessWidget {
+class InitialScreen extends StatefulWidget {
+  @override
+  _InitialScreenState createState() => _InitialScreenState();
+}
+
+class _InitialScreenState extends State<InitialScreen> {
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  void _checkLoginStatus() async {
+    String? userRole = await _storage.read(key: 'userRole');
+    if (userRole != null) {
+      if (userRole == 'Boss') {
+        Navigator.pushReplacementNamed(context, '/boss_dashboard');
+      } else if (userRole == 'CEO') {
+        Navigator.pushReplacementNamed(context, '/ceo_dashboard');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF2F0E8),
       appBar: AppBar(
-        title: Text('Welcome', style: GoogleFonts.rubik()),
+        title: Text('Welcome', style: GoogleFonts.nunito(color: Colors.white)),
         backgroundColor: Color(0xFFD97757),
       ),
       body: Center(
@@ -25,7 +50,7 @@ class InitialScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFD97757),
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.bold),
+                  textStyle: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
@@ -35,34 +60,12 @@ class InitialScreen extends StatelessWidget {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('CEO Login or Sign Up', style: GoogleFonts.rubik()),
-                      content: Text('Are you an existing CEO or a new CEO?', style: GoogleFonts.rubik()),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Close dialog
-                            Navigator.pushNamed(context, '/login', arguments: 'CEO');
-                          },
-                          child: Text('Login', style: GoogleFonts.rubik(color: Color(0xFFD97757))),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Close dialog
-                            Navigator.pushNamed(context, '/signup');
-                          },
-                          child: Text('Sign Up', style: GoogleFonts.rubik(color: Color(0xFFD97757))),
-                        ),
-                      ],
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/login', arguments: 'CEO');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFD97757),
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.bold),
+                  textStyle: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),

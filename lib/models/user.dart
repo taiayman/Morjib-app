@@ -1,4 +1,3 @@
-// user.dart
 class User {
   String id;
   String name;
@@ -22,6 +21,7 @@ class User {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'email': email,
       'role': role,
