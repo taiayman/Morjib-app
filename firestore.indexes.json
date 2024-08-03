@@ -1,0 +1,14 @@
+{
+    "indexes": [
+      {
+        "collectionGroup": "messages",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "userId", "order": "ASCENDING" },
+          { "fieldPath": "isAdmin", "order": "ASCENDING" },
+          { "fieldPath": "read", "order": "ASCENDING" }, 
+          { "fieldPath": "timestamp", "order": "ASCENDING" }
+        ]
+      }
+    ]
+  }

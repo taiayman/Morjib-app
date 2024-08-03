@@ -1,37 +1,83 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:business_management_app/models/notification.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/material.dart';
 
 class NotificationService {
-  final CollectionReference _notificationCollection = FirebaseFirestore.instance.collection('notifications');
-  final CollectionReference _userCollection = FirebaseFirestore.instance.collection('users');
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static bool _isRequestingPermission = false;
 
-  Future<List<Notification>> getAllNotifications() async {
-    QuerySnapshot querySnapshot = await _notificationCollection.get();
-    return querySnapshot.docs.map((doc) => Notification.fromMap(doc.data() as Map<String, dynamic>)).toList();
-  }
+  Future<void> init() async {
+    if (_isRequestingPermission) return;
+    _isRequestingPermission = true;
 
-  Future<void> markNotificationAsRead(String notificationId) async {
-    await _notificationCollection.doc(notificationId).update({'isRead': true});
-  }
+    try {
+      // Request permission for iOS devices
+      await _fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
-  Future<Map<String, String>?> getSenderDetails(String senderId) async {
-    DocumentSnapshot senderDoc = await _userCollection.doc(senderId).get();
-    if (senderDoc.exists) {
-      var data = senderDoc.data() as Map<String, dynamic>;
-      return {
-        'name': data['name'] ?? 'Unknown',
-        'company': data['company'] ?? 'Unknown',
-      };
-    } else {
-      return null;
+      // Configure FCM
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Initialize local notifications
+      const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+      final DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
+      final InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+      );
+      await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    } catch (e) {
+      print('Failed to request permission: $e');
+    } finally {
+      _isRequestingPermission = false;
     }
   }
 
-  Future<void> deleteNotification(String notificationId) async {
-    await _notificationCollection.doc(notificationId).delete();
+  Future<String?> getToken() async {
+    return await _fcm.getToken();
   }
 
-  Future<void> addNotification(Notification notification) async {
-    await _notificationCollection.doc(notification.id).set(notification.toMap());
+  void _handleForegroundMessage(RemoteMessage message) {
+    print("Handling a foreground message: ${message.messageId}");
+    _showNotification(message);
   }
+
+  void _handleBackgroundMessage(RemoteMessage message) {
+    print("Handling a background message: ${message.messageId}");
+    // Handle background message, e.g., navigate to a specific screen
+  }
+
+  Future<void> _showNotification(RemoteMessage message) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'order_updates_channel',
+      'Order Updates',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    
+    await _flutterLocalNotificationsPlugin.show(
+      0, // Notification ID
+      message.notification?.title ?? 'New Notification',
+      message.notification?.body ?? '',
+      platformChannelSpecifics,
+      payload: message.data['order_id'],
+    );
+  }
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Handling a background message: ${message.messageId}");
+  // Handle background message, e.g., update local storage
 }

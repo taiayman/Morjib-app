@@ -1,47 +1,34 @@
 class User {
-  String id;
-  String name;
-  String email;
-  String role;
-  String companyId;
-  String whatsapp;
-  String description;
-  String profileImage;
+  final String id;
+  final String email;
+  final String name;
+  final String phone;
+  final int points;
 
   User({
     required this.id,
-    required this.name,
     required this.email,
-    required this.role,
-    required this.companyId,
-    required this.whatsapp,
-    required this.description,
-    required this.profileImage,
+    required this.name,
+    required this.phone,
+    this.points = 0,
   });
+
+  factory User.fromFirestore(Map<String, dynamic> data, String id) {
+    return User(
+      id: id,
+      email: data['email'] ?? '',
+      name: data['name'] ?? '',
+      phone: data['phone'] ?? '',
+      points: data['points'] ?? 0,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'name': name,
       'email': email,
-      'role': role,
-      'companyId': companyId,
-      'whatsapp': whatsapp,
-      'description': description,
-      'profileImage': profileImage,
+      'name': name,
+      'phone': phone,
+      'points': points,
     };
-  }
-
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      email: map['email'] ?? '',
-      role: map['role'] ?? '',
-      companyId: map['companyId'] ?? '',
-      whatsapp: map['whatsapp'] ?? '',
-      description: map['description'] ?? '',
-      profileImage: map['profileImage'] ?? '',
-    );
   }
 }

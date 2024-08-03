@@ -1,53 +1,85 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:business_management_app/models/user.dart' as app_user;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:flutter/foundation.dart';
+import '../models/custom_user.dart';
+import '../services/firestore_service.dart';
 
-class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final CollectionReference _userCollection = FirebaseFirestore.instance.collection('users');
-  final FlutterSecureStorage _storage = FlutterSecureStorage();
+class AuthService extends ChangeNotifier {
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
 
-  Future<bool> login(String email, String password) async {
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      await _storage.write(key: 'userId', value: userCredential.user?.uid);
-      return userCredential.user != null;
-    } catch (e) {
-      print(e.toString());
-      return false;
+  // Create CustomUser object based on FirebaseUser
+  CustomUser? _userFromFirebaseUser(auth.User? user) {
+    if (user == null) {
+      return null;
     }
+    return CustomUser.fromFirebaseUser(user);
   }
 
-  Future<bool> signUp(String email, String password) async {
+  // Auth change user stream
+  Stream<CustomUser?> get user {
+    return _auth.authStateChanges().map(_userFromFirebaseUser);
+  }
+
+  // Get current user
+  CustomUser? get currentUser {
+    return _userFromFirebaseUser(_auth.currentUser);
+  }
+
+  // Sign in with email & password
+  Future<CustomUser?> signInWithEmailAndPassword(String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      return userCredential.user != null;
-    } catch (e) {
-      print(e.toString());
-      return false;
-    }
-  }
-
-  Future<void> logout() async {
-    await _auth.signOut();
-    await _storage.delete(key: 'userId');
-  }
-
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
-
-  Future<app_user.User> getUserDetails(String userId) async {
-    try {
-      DocumentSnapshot doc = await _userCollection.doc(userId).get();
-      if (doc.exists) {
-        return app_user.User.fromMap(doc.data() as Map<String, dynamic>);
-      } else {
-        throw Exception('User not found');
+      auth.UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      auth.User? user = result.user;
+      if (user != null) {
+        // Fetch user data from Firestore
+        int points = await _firestoreService.getUserPoints(user.uid);
+        CustomUser customUser = CustomUser.fromFirebaseUser(user, points: points);
+        notifyListeners();
+        return customUser;
       }
+      return null;
     } catch (e) {
-      throw Exception('Error getting user details: $e');
+      print(e.toString());
+      return null;
     }
+  }
+
+  Future<CustomUser?> registerWithEmailAndPassword(String email, String password, String name, String phone) async {
+    try {
+      auth.UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      auth.User? user = result.user;
+      if (user != null) {
+        // Create a new document for the user with the uid
+        await _firestoreService.createUser(user.uid, email, name, phone);
+        CustomUser customUser = CustomUser.fromFirebaseUser(user, points: 0);
+        notifyListeners();
+        return customUser;
+      }
+      return null;
+    } catch (e) {
+      print('Error in registerWithEmailAndPassword: ${e.toString()}');
+      rethrow; // Rethrow the error so it can be caught and handled in the UI
+    }
+  }
+
+
+  // Sign out
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+      notifyListeners();
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    auth.User? user = _auth.currentUser;
+    if (user != null) {
+      // Optionally, you can perform additional checks here
+      // For example, checking if the user's token is still valid
+      return true;
+    }
+    return false;
   }
 }
