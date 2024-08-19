@@ -1,128 +1,121 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../services/chat_service.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String chatId;
+  final String orderId;
 
-  ChatScreen({required this.chatId});
+  ChatScreen({required this.orderId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
+    final chatService = Provider.of<ChatService>(context, listen: false);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Customer Support'),
-      ),
+      appBar: AppBar(title: Text("Chat - Order ${widget.orderId}")),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _chatService.getMessages(widget.chatId),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: chatService.getChatMessages(widget.orderId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
-
-                return ListView(
+                final messages = snapshot.data ?? [];
+                return ListView.builder(
                   reverse: true,
-                  children: snapshot.data!.docs.map((doc) {
-                    var data = doc.data() as Map<String, dynamic>;
-                    return MessageBubble(
-                      message: data['message'],
-                      isMe: data['senderId'] == _chatService.getCurrentUserId(),
-                      senderName: data['senderName'],
-                    );
-                  }).toList(),
+                  controller: _scrollController,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return _buildMessageBubble(messages[index]);
+                  },
                 );
               },
             ),
           ),
-          StreamBuilder<DocumentSnapshot>(
-            stream: _chatService.getChatStatus(widget.chatId),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.exists) {
-                var chatData = snapshot.data!.data() as Map<String, dynamic>;
-                if (chatData['status'] == 'closed') {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('This chat has been closed by the support team.',
-                      style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
-                    ),
-                  );
-                }
-              }
-              return Container();
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    if (_messageController.text.isNotEmpty) {
-                      _chatService.sendMessage(widget.chatId, _messageController.text);
-                      _messageController.clear();
-                    }
-                  },
-                ),
-              ],
+          _buildMessageInput(chatService),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final isCurrentUser = message['isUser'];
+    return Align(
+      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message['sender'],
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
+            SizedBox(height: 4),
+            Text(message['text']),
+            SizedBox(height: 4),
+            Text(
+              message['timestamp'].toString().substring(11, 16),
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageInput(ChatService chatService) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.send),
+            onPressed: () => _sendMessage(chatService),
           ),
         ],
       ),
     );
   }
-}
 
-class MessageBubble extends StatelessWidget {
-  final String message;
-  final bool isMe;
-  final String senderName;
-
-  MessageBubble({required this.message, required this.isMe, required this.senderName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(senderName, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          Material(
-            color: isMe ? Colors.blue[200] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(10),
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              child: Text(message),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _sendMessage(ChatService chatService) {
+    if (_messageController.text.isNotEmpty) {
+      chatService.sendMessage(widget.orderId, _messageController.text);
+      _messageController.clear();
+      _scrollController.animateTo(
+        0,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 }

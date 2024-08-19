@@ -4,8 +4,18 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+
+class DeliverooColors {
+  static const Color primary = Color(0xFF00CCBC);
+  static const Color secondary = Color(0xFF2E3333);
+  static const Color background = Color(0xFFF9FAFA);
+  static const Color cardBackground = Colors.white;
+  static const Color textDark = Color(0xFF2E3333);
+  static const Color textLight = Color(0xFF585C5C);
+}
 
 class AddressCaptureScreen extends StatefulWidget {
   @override
@@ -164,7 +174,7 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange.shade300, Colors.deepOrange.shade600],
+            colors: [DeliverooColors.primary, DeliverooColors.primary.withOpacity(0.8)],
           ),
         ),
         child: SafeArea(
@@ -187,7 +197,9 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
           SizedBox(height: 16),
           Text(
             'Getting your location...',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: GoogleFonts.poppins(
+              textStyle: TextStyle(color: Colors.white, fontSize: 18),
+            ),
           ),
         ],
       ),
@@ -203,15 +215,17 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
           SizedBox(height: 16),
           Text(
             _errorMessage,
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: GoogleFonts.poppins(
+              textStyle: TextStyle(color: Colors.white, fontSize: 18),
+            ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24),
           ElevatedButton(
             onPressed: _checkLocationPermission,
-            child: Text('Retry', style: TextStyle(fontSize: 16)),
+            child: Text('Retry', style: GoogleFonts.poppins(fontSize: 16)),
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.deepOrange,
+              foregroundColor: DeliverooColors.primary,
               backgroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
@@ -231,64 +245,66 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
           padding: const EdgeInsets.all(16.0),
           child: Text(
             'Confirm Your Address',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            margin: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: _currentPosition ?? LatLng(0, 0),
-                  initialZoom: 16.0,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                    subdomains: ['a', 'b', 'c'],
-                  ),
-                  if (_currentPosition != null)
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          width: 80.0,
-                          height: 80.0,
-                          point: _currentPosition!,
-                          child: Icon(
-                            Icons.location_on,
-                            color: Colors.deepOrange,
-                            size: 40.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
+            style: GoogleFonts.poppins(
+              textStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
+      Expanded(
+        child: Container(
+          margin: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: DeliverooColors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _currentPosition ?? LatLng(0, 0),
+                initialZoom: 16.0,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  subdomains: ['a', 'b', 'c'],
+                ),
+                if (_currentPosition != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        width: 80.0,
+                        height: 80.0,
+                        point: _currentPosition!,
+                        child: Icon(
+                          Icons.location_on,
+                          color: DeliverooColors.primary,
+                          size: 40.0,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
         Container(
           padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: DeliverooColors.cardBackground,
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: Column(
@@ -296,16 +312,20 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
             children: [
               Text(
                 'Your current address:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.deepOrange,
+                style: GoogleFonts.poppins(
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: DeliverooColors.primary,
+                  ),
                 ),
               ),
               SizedBox(height: 8),
               Text(
                 _currentAddress,
-                style: TextStyle(fontSize: 16),
+                style: GoogleFonts.poppins(
+                  textStyle: TextStyle(fontSize: 16, color: DeliverooColors.textDark),
+                ),
               ),
               SizedBox(height: 24),
               ElevatedButton(
@@ -313,38 +333,41 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Text(
                     'Confirm Address',
-                    style: TextStyle(fontSize: 18),
+                    style: GoogleFonts.poppins(
+                      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.deepOrange,
+                  backgroundColor: DeliverooColors.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                   elevation: 5,
                 ),
                 onPressed: () async {
-                  if (_currentPosition != null) {
-                    try {
-                      await _firestoreService.saveUserAddress(
-                        AuthService().currentUser!.uid,
-                        _currentAddress,
-                        _currentPosition!.latitude,
-                        _currentPosition!.longitude,
-                      );
-                      Navigator.of(context).pushReplacementNamed('/home');
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving address: $e')),
-                      );
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Unable to save address. Please try again.')),
-                    );
-                  }
-                },
+    if (_currentPosition != null) {
+      try {
+        await _firestoreService.saveUserAddress(
+          AuthService().currentUser!.uid,
+          _currentAddress,
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+        );
+        Navigator.of(context).pushReplacementNamed('/home');
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving address: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to save address. Please try again.')),
+      );
+    }
+  },
+
               ),
             ],
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:my_delivery_app/screens/address_capture_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/supermarket_screen.dart';
@@ -27,7 +28,7 @@ import 'services/recommendation_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
+
   final notificationService = NotificationService();
   await notificationService.init();
 
@@ -64,7 +65,11 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => CartService()),
+        ChangeNotifierProxyProvider<AuthService, CartService>(
+          create: (_) => CartService(),
+          update: (_, authService, previousCartService) =>
+              previousCartService!..updateUserId(authService.currentUser?.uid),
+        ),
         Provider<NotificationService>.value(value: notificationService),
         Provider<PaymentService>.value(value: paymentService),
         Provider<ChatService>.value(value: chatService),
@@ -76,6 +81,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
+        debugShowCheckedModeBanner: false,
         home: AuthWrapper(),
         routes: {
           '/home': (context) => HomeScreen(),
@@ -83,7 +89,7 @@ class MyApp extends StatelessWidget {
           '/register': (context) => RegisterScreen(),
           '/profile': (context) => ProfileScreen(),
           '/supermarkets': (context) => SupermarketScreen(),
-          '/traditional_market': (context) => TraditionalMarketScreen(),
+          '/traditional_market': (context) => TraditionalMarketScreen(location: 'casablanca'),
           '/shops': (context) => ShopsScreen(),
           '/checkout': (context) => CheckoutScreen(),
           '/search': (context) => SearchScreen(),
@@ -106,6 +112,7 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
+
     return FutureBuilder<bool>(
       future: authService.isUserLoggedIn(),
       builder: (context, snapshot) {

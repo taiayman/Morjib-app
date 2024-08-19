@@ -5,46 +5,66 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Stream<QuerySnapshot> getMessages(String chatId) {
+  Stream<List<Map<String, dynamic>>> getChatMessages(String orderId) {
     return _firestore
         .collection('chats')
-        .doc(chatId)
+        .doc(orderId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
-        .snapshots();
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'text': data['message'],
+          'sender': data['senderName'],
+          'timestamp': (data['timestamp'] as Timestamp).toDate(),
+          'isUser': data['senderId'] == _auth.currentUser?.uid,
+        };
+      }).toList();
+    });
   }
 
-  Future<void> sendMessage(String chatId, String message) async {
+  Future<void> sendMessage(String orderId, String message) async {
     final user = _auth.currentUser;
     if (user != null) {
-      await _firestore.collection('chats').doc(chatId).collection('messages').add({
+      final messageData = {
         'senderId': user.uid,
         'senderName': user.displayName ?? 'User',
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
+      };
+
+      await _firestore.collection('chats').doc(orderId).collection('messages').add(messageData);
+
+      await _firestore.collection('chats').doc(orderId).update({
+        'lastMessage': message,
+        'lastMessageTimestamp': FieldValue.serverTimestamp(),
+        'unreadCount': FieldValue.increment(1),
       });
     }
   }
 
-  Future<String> createNewChat() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      final chatDoc = await _firestore.collection('chats').add({
-        'userId': user.uid,
-        'userEmail': user.email,
-        'createdAt': FieldValue.serverTimestamp(),
-        'status': 'open',
-      });
-      return chatDoc.id;
+  Future<String> getLastMessage(String chatId) async {
+    final snapshot = await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first['message'];
+    } else {
+      return 'No messages yet';
     }
-    throw Exception('User not authenticated');
   }
 
-  Stream<DocumentSnapshot> getChatStatus(String chatId) {
-    return _firestore.collection('chats').doc(chatId).snapshots();
-  }
-
-  String? getCurrentUserId() {
-    return _auth.currentUser?.uid;
+  Future<void> markChatAsRead(String chatId) async {
+    await _firestore.collection('chats').doc(chatId).update({
+      'unreadCount': 0,
+    });
   }
 }

@@ -23,7 +23,7 @@
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
-        android:label="My delivery"
+        android:label="DeliverGo"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
 

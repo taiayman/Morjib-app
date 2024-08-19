@@ -53,15 +53,31 @@ class FirestoreService {
     return querySnapshot.docs;
   }
 
-  Future<String> createOrder(String userId, double totalAmount, List<Map<String, dynamic>> orderItems, {required String status, String? paymentIntentId}) async {
+  Future<String> createOrder({
+    required String userId,
+    required double totalAmount,
+    required List<Map<String, dynamic>> orderItems,
+    required String status,
+    required String paymentMethod,
+    required String address,
+    required String phoneNumber,
+    required GeoPoint location,
+    String? paymentIntentId,
+    required String sellerType,
+  }) async {
     DocumentReference orderRef = await _firestore.collection('orders').add({
       'user_id': userId,
       'total_amount': totalAmount,
       'status': status,
+      'payment_method': paymentMethod,
+      'address': address,
+      'phone_number': phoneNumber,
+      'location': location,
       'payment_intent_id': paymentIntentId,
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
       'items': orderItems,
+      'seller_type': sellerType,
     });
 
     // Calculate and add loyalty points (1 point per 10 MAD spent)
@@ -69,6 +85,14 @@ class FirestoreService {
     await addPoints(userId, pointsEarned);
 
     return orderRef.id;
+  }
+
+    Stream<int> getUserPointsStream(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) => snapshot.data()?['points'] ?? 0);
   }
 
   // Favorites methods
@@ -312,7 +336,11 @@ Future<bool> userHasAddress(String userId) async {
     });
   }
 
-  
-
-  
+    Future<void> updateUserInfo(String uid, String name, String phone, String address) async {
+    await _firestore.collection('users').doc(uid).update({
+      'name': name,
+      'phone': phone,
+      'address': address,
+    });
+  }
 }
