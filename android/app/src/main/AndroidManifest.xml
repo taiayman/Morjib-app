@@ -23,7 +23,7 @@
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
-        android:label="DeliverGo"
+        android:label="Morjib"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
 

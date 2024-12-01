@@ -30,7 +30,13 @@ class MarjaneService {
             final linkElement = element.querySelector('a');
             final imageElement = element.querySelector('img');
 
-            final name = nameElement?.text.trim() ?? 'Unknown Category';
+            final name = nameElement?.text.trim() ?? '';
+            
+            // Skip unknown or empty categories
+            if (name.toLowerCase() == 'unknown' || name.isEmpty) {
+              return null;
+            }
+
             final categoryUrl = linkElement?.attributes['href'] ?? '';
             final imageUrl = imageElement?.attributes['src'] ?? '';
 
@@ -41,7 +47,7 @@ class MarjaneService {
               imageUrl: imageUrl,
               isSubcategory: false,
             );
-          }).toList();
+          }).whereType<Category>().toList(); // Filter out null values
         } else {
           print('Failed to load Marjane categories: HTTP ${response.statusCode}');
           if (attempt == maxRetries - 1) {
@@ -79,7 +85,13 @@ class MarjaneService {
             final imageElement = element.querySelector('img.tile__image');
             final productLinkElement = element.querySelector('a');
 
-            final name = nameElement?.text.trim() ?? 'Unknown Product';
+            final name = nameElement?.text.trim() ?? '';
+            
+            // Skip unknown or empty products
+            if (name.toLowerCase() == 'unknown' || name.isEmpty) {
+              return null;
+            }
+
             final priceText = priceElement?.text.replaceAll(RegExp(r'[^\d.,]'), '').replaceAll(',', '.') ?? '0';
             final price = double.tryParse(priceText) ?? 0.0;
             final imageUrl = imageElement?.attributes['src'] ?? '';
@@ -104,7 +116,7 @@ class MarjaneService {
               numberOfRatings: numberOfRatings,
               url: productUrl,
             );
-          }).toList();
+          }).whereType<Product>().toList(); // Filter out null values
         } else {
           print('Failed to load category products: HTTP ${response.statusCode}');
           if (attempt == maxRetries - 1) {

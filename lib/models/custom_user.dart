@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 class CustomUser {
   final String uid;
   final String? email;
-  final String? displayName;
+  String? displayName; // Change from final to non-final
   final int points;
 
   CustomUser({
@@ -20,5 +20,13 @@ class CustomUser {
       displayName: user.displayName,
       points: points,
     );
+  }
+
+  String get name {
+    return displayName ?? '';
+  }
+
+  set name(String value) {
+    displayName = value; 
   }
 }

@@ -4,6 +4,16 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+class DeliverooColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
+  static const Color textDark = Color(0xFF2E3333);
+  static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFD9B382);
+}
 
 class PointsHistoryScreen extends StatelessWidget {
   final FirestoreService _firestoreService = FirestoreService();
@@ -14,6 +24,7 @@ class PointsHistoryScreen extends StatelessWidget {
     final userId = authService.currentUser?.uid;
 
     return Scaffold(
+      backgroundColor: DeliverooColors.background,
       body: userId == null
           ? _buildLoginPrompt()
           : _buildPointsHistory(context, userId),
@@ -23,29 +34,30 @@ class PointsHistoryScreen extends StatelessWidget {
   Widget _buildLoginPrompt() {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Points History', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+        title: Text('points_history'.tr(), style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold, fontSize: 24)),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: DeliverooColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.account_circle_outlined, size: 64, color: Colors.grey[600]),
+            Icon(Icons.account_circle_outlined, size: 64, color: DeliverooColors.accent),
             SizedBox(height: 16),
             Text(
-              'Please log in to view points history',
-              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400),
+              'please_log_in_to_view_points_history'.tr(),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400, color: DeliverooColors.textDark),
             ),
             SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
                 // TODO: Implement login navigation
               },
-              child: Text('Log In', style: GoogleFonts.poppins()),
+              child: Text('log_in'.tr(), style: GoogleFonts.poppins()),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                backgroundColor: DeliverooColors.primary,
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 elevation: 0,
               ),
@@ -64,7 +76,7 @@ class PointsHistoryScreen extends StatelessWidget {
       ]),
       builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(strokeWidth: 2));
+          return Center(child: CircularProgressIndicator(strokeWidth: 2, color: DeliverooColors.primary));
         }
         if (snapshot.hasError) {
           return _buildErrorWidget(snapshot.error.toString());
@@ -83,8 +95,8 @@ class PointsHistoryScreen extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Text(
-                  'Transaction History',
-                  style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w500),
+                  'transaction_history'.tr(),
+                  style: GoogleFonts.playfairDisplay(fontSize: 24, fontWeight: FontWeight.bold, color: DeliverooColors.textDark),
                 ),
               ),
             ),
@@ -109,23 +121,24 @@ class PointsHistoryScreen extends StatelessWidget {
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
-          'Points History',
-          style: GoogleFonts.poppins(
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          'points_history'.tr(),
+          style: GoogleFonts.playfairDisplay(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
           ),
         ),
         background: Container(
-          color: Colors.white,
+          color: DeliverooColors.primary,
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Current Balance',
+                  'current_balance'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
-                    color: Colors.black54,
+                    color: Colors.white.withOpacity(0.8),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -135,7 +148,7 @@ class PointsHistoryScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 48,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -143,8 +156,8 @@ class PointsHistoryScreen extends StatelessWidget {
           ),
         ),
       ),
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+      backgroundColor: DeliverooColors.primary,
+      foregroundColor: Colors.white,
     );
   }
 
@@ -156,8 +169,15 @@ class PointsHistoryScreen extends StatelessWidget {
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: DeliverooColors.secondary.withOpacity(0.2)),
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: DeliverooColors.primary.withOpacity(0.05),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -168,13 +188,13 @@ class PointsHistoryScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${data['points'].abs()} points ${isEarned ? 'earned' : 'spent'}',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16),
+                  '${data['points'].abs()} ${isEarned ? 'points_earned'.tr() : 'points_spent'.tr()}',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16, color: DeliverooColors.textDark),
                 ),
                 SizedBox(height: 4),
                 Text(
                   DateFormat('MMM d, yyyy - HH:mm').format(data['timestamp'].toDate()),
-                  style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14),
+                  style: GoogleFonts.poppins(color: DeliverooColors.textLight, fontSize: 14),
                 ),
               ],
             ),
@@ -182,7 +202,7 @@ class PointsHistoryScreen extends StatelessWidget {
           Text(
             '${isEarned ? '+' : '-'}${data['points'].abs()}',
             style: GoogleFonts.poppins(
-              color: isEarned ? Colors.green[700] : Colors.red[700],
+              color: isEarned ? DeliverooColors.primary : Colors.red[700],
               fontWeight: FontWeight.w600,
               fontSize: 18,
             ),
@@ -196,12 +216,12 @@ class PointsHistoryScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: isEarned ? Colors.green[100] : Colors.red[100],
+        color: isEarned ? DeliverooColors.primary.withOpacity(0.1) : Colors.red[100],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
         isEarned ? Icons.add : Icons.remove,
-        color: isEarned ? Colors.green[700] : Colors.red[700],
+        color: isEarned ? DeliverooColors.primary : Colors.red[700],
         size: 24,
       ),
     );
@@ -210,25 +230,25 @@ class PointsHistoryScreen extends StatelessWidget {
   Widget _buildErrorWidget(String error) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Error', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+        title: Text('error'.tr(), style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold, fontSize: 24)),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: DeliverooColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 64, color: DeliverooColors.accent),
             SizedBox(height: 16),
             Text(
-              'Oops! Something went wrong',
-              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400),
+              'oops_something_went_wrong'.tr(),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400, color: DeliverooColors.textDark),
             ),
             SizedBox(height: 8),
             Text(
               error,
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
+              style: GoogleFonts.poppins(color: DeliverooColors.textLight),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
@@ -236,9 +256,10 @@ class PointsHistoryScreen extends StatelessWidget {
               onPressed: () {
                 // TODO: Implement retry functionality
               },
-              child: Text('Retry', style: GoogleFonts.poppins()),
+              child: Text('retry'.tr(), style: GoogleFonts.poppins()),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                backgroundColor: DeliverooColors.primary,
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 elevation: 0,
               ),
@@ -252,25 +273,25 @@ class PointsHistoryScreen extends StatelessWidget {
   Widget _buildEmptyStateWidget() {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Points History', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+        title: Text('points_history'.tr(), style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold, fontSize: 24)),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: DeliverooColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: Colors.grey[400]),
+            Icon(Icons.history, size: 64, color: DeliverooColors.accent),
             SizedBox(height: 16),
             Text(
-              'No transaction history yet',
-              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400),
+              'no_transaction_history_yet'.tr(),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w400, color: DeliverooColors.textDark),
             ),
             SizedBox(height: 8),
             Text(
-              'Start earning or spending points to see your history here!',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
+              'start_earning_or_spending_points'.tr(),
+              style: GoogleFonts.poppins(color: DeliverooColors.textLight),
               textAlign: TextAlign.center,
             ),
           ],

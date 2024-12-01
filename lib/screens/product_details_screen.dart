@@ -6,8 +6,10 @@ import '../models/product.dart';
 import '../models/review.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/review_service.dart';
 import '../widgets/review_list_item.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final String productId;
@@ -28,20 +30,31 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final userId = authService.currentUser?.uid;
 
     return Scaffold(
+      backgroundColor: CarrefourColors.background,
       appBar: AppBar(
-        title: Text('Product Details'),
+        title: Text(
+          'product_details'.tr(),
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: CarrefourColors.primary,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _firestoreService.getProductDetails(widget.productId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(CarrefourColors.primary)));
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('error_message'.tr(args: [snapshot.error.toString()]), style: GoogleFonts.poppins(color: Colors.red, fontSize: 16)));
           }
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('Product not found'));
+            return Center(child: Text('product_not_found'.tr()));
           }
 
           var productData = snapshot.data!.data() as Map<String, dynamic>;
@@ -55,39 +68,73 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(productData['name'], style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text(
+                        productData['name'],
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: CarrefourColors.textDark,
+                        ),
+                      ),
                       SizedBox(height: 8),
-                      Text('${productData['price']} MAD', style: TextStyle(fontSize: 18, color: Colors.green)),
+                      Text(
+                        '${productData['price']} MAD',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: CarrefourColors.primary,
+                        ),
+                      ),
                       SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.star, color: Colors.amber),
+                          Icon(Icons.star, color: CarrefourColors.accent),
                           Text(
                             ' ${(productData['averageRating'] ?? 0).toStringAsFixed(1)} ',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: CarrefourColors.textDark,
+                            ),
                           ),
                           Text(
-                            '(${productData['numberOfReviews'] ?? 0} reviews)',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            '(${productData['numberOfReviews'] ?? 0} ${'reviews'.tr()})',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: CarrefourColors.textLight,
+                            ),
                           ),
                         ],
                       ),
                       SizedBox(height: 16),
-                      Text(productData['description']),
+                      Text(
+                        productData['description'],
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: CarrefourColors.textDark,
+                        ),
+                      ),
                       SizedBox(height: 24),
-                      Text('Reviews', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text(
+                        'reviews'.tr(),
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: CarrefourColors.textDark,
+                        ),
+                      ),
                       SizedBox(height: 8),
                       FutureBuilder<List<Review>>(
                         future: _reviewService.getProductReviews(widget.productId),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
+                            return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(CarrefourColors.primary)));
                           }
                           if (snapshot.hasError) {
-                            return Center(child: Text('Error loading reviews'));
+                            return Center(child: Text('error_loading_reviews'.tr(), style: GoogleFonts.poppins(color: Colors.red, fontSize: 16)));
                           }
                           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return Text('No reviews yet');
+                            return Text('no_reviews_yet'.tr(), style: GoogleFonts.poppins(color: CarrefourColors.textLight, fontSize: 16));
                           }
                           return Column(
                             children: snapshot.data!.map((review) => ReviewListItem(review: review)).toList(),
@@ -104,7 +151,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ),
       floatingActionButton: userId != null
           ? FloatingActionButton(
-              child: Icon(Icons.rate_review),
+              child: Icon(Icons.rate_review, color: Colors.white),
+              backgroundColor: CarrefourColors.primary,
               onPressed: () {
                 Navigator.push(
                   context,
@@ -117,4 +165,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           : null,
     );
   }
+}
+
+class CarrefourColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
+  static const Color textDark = Color(0xFF2E3333);
+  static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFD9B382);
 }

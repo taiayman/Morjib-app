@@ -5,6 +5,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import './order_tracking_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+class CarrefourColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
+  static const Color textDark = Color(0xFF2E3333);
+  static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFD9B382);
+}
 
 class OrderHistoryScreen extends StatelessWidget {
   final FirestoreService _firestoreService = FirestoreService();
@@ -15,32 +25,32 @@ class OrderHistoryScreen extends StatelessWidget {
     final userId = authService.currentUser?.uid;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: CarrefourColors.background,
       appBar: AppBar(
         title: Text(
           'Order History',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: CarrefourColors.primary,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: userId == null
           ? Center(
               child: Text(
-                'Please log in to view order history',
-                style: GoogleFonts.poppins(fontSize: 16),
+                'Please log in',
+                style: GoogleFonts.poppins(fontSize: 16, color: CarrefourColors.textDark),
               ),
             )
           : FutureBuilder<List<QueryDocumentSnapshot>>(
               future: _firestoreService.getOrderHistory(userId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00CCBC))));
+                  return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(CarrefourColors.primary)));
                 }
                 if (snapshot.hasError) {
                   return Center(
@@ -54,7 +64,7 @@ class OrderHistoryScreen extends StatelessWidget {
                   return Center(
                     child: Text(
                       'No orders found',
-                      style: GoogleFonts.poppins(fontSize: 16),
+                      style: GoogleFonts.poppins(fontSize: 16, color: CarrefourColors.textDark),
                     ),
                   );
                 }
@@ -68,10 +78,10 @@ class OrderHistoryScreen extends StatelessWidget {
                     return Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: CarrefourColors.secondary.withOpacity(0.1),
                             blurRadius: 10,
                             offset: Offset(0, 5),
                           ),
@@ -87,11 +97,11 @@ class OrderHistoryScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Order #${_truncateOrderId(snapshot.data![i].id)}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
+                                    'Order #${snapshot.data![i].id}',
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: CarrefourColors.textDark,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -102,10 +112,10 @@ class OrderHistoryScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              'Date: ${_formatDate(order['created_at'].toDate())}',
+                              _formatDate(order['created_at'].toDate()),
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: CarrefourColors.textLight,
                               ),
                             ),
                             SizedBox(height: 8),
@@ -114,32 +124,44 @@ class OrderHistoryScreen extends StatelessWidget {
                               style: GoogleFonts.poppins(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF00CCBC),
+                                color: CarrefourColors.primary,
                               ),
                             ),
                             SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => OrderTrackingScreen(orderId: snapshot.data![i].id),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: CarrefourColors.accent.withOpacity(0.5),
+                                    offset: Offset(0, 4),
+                                    blurRadius: 0,
                                   ),
-                                );
-                              },
-                              child: Text(
-                                'View Details',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                ],
                               ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF00CCBC),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                minimumSize: Size(double.infinity, 48),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => OrderTrackingScreen(orderId: snapshot.data![i].id),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'View Details',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: CarrefourColors.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  minimumSize: Size(double.infinity, 48),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -154,19 +176,19 @@ class OrderHistoryScreen extends StatelessWidget {
     );
   }
 
-Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(String status) {
     Color chipColor;
     Color textColor;
     IconData statusIcon;
     switch (status.toLowerCase()) {
       case 'processing':
-        chipColor = Colors.blue[100]!;
-        textColor = Colors.blue[800]!;
+        chipColor = CarrefourColors.primary.withOpacity(0.1);
+        textColor = CarrefourColors.primary;
         statusIcon = Icons.hourglass_empty;
         break;
       case 'shipped':
-        chipColor = Colors.amber[100]!;
-        textColor = Colors.amber[800]!;
+        chipColor = CarrefourColors.accent.withOpacity(0.1);
+        textColor = CarrefourColors.accent;
         statusIcon = Icons.local_shipping;
         break;
       case 'delivered':
@@ -210,10 +232,6 @@ Widget _buildStatusChip(String status) {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  String _truncateOrderId(String orderId) {
-    return (orderId.length <= 8) ? orderId : '${orderId.substring(0, 8)}...';
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 }

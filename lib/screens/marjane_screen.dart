@@ -9,14 +9,15 @@ import '../models/category.dart';
 import '../models/product.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:easy_localization/easy_localization.dart';
 
-class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
+class MarjaneColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
-  static const Color accent = Color(0xFFFF8000);
+  static const Color accent = Color(0xFFD9B382);
 }
 
 class MarjaneScreen extends StatefulWidget {
@@ -43,7 +44,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DeliverooColors.background,
+      backgroundColor: MarjaneColors.background,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
@@ -57,11 +58,11 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                 return SliverToBoxAdapter(child: _buildCategoryShimmerEffect());
               } else if (snapshot.hasError) {
                 return SliverToBoxAdapter(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
+                  child: Center(child: Text('error_message'.tr(args: [snapshot.error.toString()]))),
                 );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return SliverToBoxAdapter(
-                  child: Center(child: Text('No categories found')),
+                  child: Center(child: Text('no_categories_found'.tr())),
                 );
               } else {
                 return SliverList(
@@ -83,12 +84,12 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
       floating: true,
       snap: true,
       elevation: 2,
-      backgroundColor: DeliverooColors.primary,
+      backgroundColor: MarjaneColors.primary,
       iconTheme: IconThemeData(color: Colors.white),
       title: Text(
-        'Marjane',
-        style: GoogleFonts.poppins(
-          textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+        'marjane'.tr(),
+        style: GoogleFonts.playfairDisplay(
+          textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28),
         ),
       ),
       actions: [
@@ -107,7 +108,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                 ),
                 badgeStyle: badges.BadgeStyle(
                   shape: badges.BadgeShape.circle,
-                  badgeColor: DeliverooColors.accent,
+                  badgeColor: MarjaneColors.accent,
                   padding: EdgeInsets.all(5),
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide.none,
@@ -118,7 +119,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.shopping_basket, color: Colors.white),
+                  icon: Icon(Icons.shopping_bag_outlined, color: Colors.white),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -141,8 +142,8 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: DeliverooColors.primary,
-            offset: Offset(0, 3),
+            color: MarjaneColors.accent,
+            offset: Offset(0, 4),
             blurRadius: 0,
           ),
         ],
@@ -151,16 +152,16 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: () => _navigateToSearchScreen(context),
-          icon: Icon(Icons.search, size: 18, color: const Color.fromARGB(255, 60, 60, 60)),
+          icon: Icon(Icons.search, size: 18, color: MarjaneColors.textDark),
           label: Text(
-            'Search in Marjane',
+            'search_in_marjane'.tr(),
             style: GoogleFonts.poppins(
-              textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DeliverooColors.primary),
+              textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: MarjaneColors.primary),
             ),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: DeliverooColors.primary,
-            side: BorderSide(color: DeliverooColors.primary, width: 2),
+            foregroundColor: MarjaneColors.primary,
+            side: BorderSide(color: MarjaneColors.primary, width: 2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -171,7 +172,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
       ),
     );
   }
-  
+
   void _navigateToSearchScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -197,10 +198,10 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Text(
             category.name,
-            style: GoogleFonts.poppins(
-              fontSize: 22,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: DeliverooColors.textDark,
+              color: MarjaneColors.textDark,
             ),
           ),
         ),
@@ -212,9 +213,9 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return _buildProductShimmerEffect();
               } else if (snapshot.hasError) {
-                return Center(child: Text('Error loading products'));
+                return Center(child: Text('error_loading_products'.tr()));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No products available'));
+                return Center(child: Text('no_products_available'.tr()));
               } else {
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -241,7 +242,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: MarjaneColors.secondary.withOpacity(0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -267,7 +268,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: DeliverooColors.primary.withOpacity(0.9),
+                    color: MarjaneColors.primary.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -294,21 +295,21 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: DeliverooColors.textDark,
+                      color: MarjaneColors.textDark,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Row(
                     children: [
-                      Icon(Icons.star, color: DeliverooColors.accent, size: 16),
+                      Icon(Icons.star, color: MarjaneColors.accent, size: 16),
                       SizedBox(width: 4),
                       Text(
                         product.averageRating.toStringAsFixed(1),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: DeliverooColors.textLight,
+                          color: MarjaneColors.textLight,
                         ),
                       ),
                       SizedBox(width: 8),
@@ -316,7 +317,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                         '(${product.numberOfRatings})',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: DeliverooColors.textLight,
+                          color: MarjaneColors.textLight,
                         ),
                       ),
                     ],
@@ -329,7 +330,7 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: DeliverooColors.primary,
+                            color: MarjaneColors.accent,
                             offset: Offset(0, 4),
                             blurRadius: 0,
                           ),
@@ -337,19 +338,24 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                       ),
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          Provider.of<CartService>(context, listen: false)
-    .addItem(product.id, product.name, product.price, product.imageUrl, product.sellerType); // Pass sellerType
+                          Provider.of<CartService>(context, listen: false).addItem(
+                            product.id,
+                            product.name,
+                            product.price,
+                            product.imageUrl,
+                            product.sellerType,
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Added to cart',
+                                'added_to_cart'.tr(),
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
                                 ),
                               ),
-                              backgroundColor: DeliverooColors.primary,
+                              backgroundColor: MarjaneColors.primary,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -358,10 +364,11 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
                           );
                         },
                         icon: Icon(Icons.add_shopping_cart, size: 18),
-                        label: Text('Add to Cart', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        label: Text('add_to_cart'.tr(),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: DeliverooColors.primary,
-                          side: BorderSide(color: DeliverooColors.primary, width: 2),
+                          foregroundColor: MarjaneColors.primary,
+                          side: BorderSide(color: MarjaneColors.primary, width: 2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -382,8 +389,8 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
 
   Widget _buildCategoryShimmerEffect() {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: MarjaneColors.secondary.withOpacity(0.3),
+      highlightColor: MarjaneColors.secondary.withOpacity(0.1),
       child: Column(
         children: [
           _buildSearchBoxShimmer(),
@@ -420,8 +427,8 @@ class _MarjaneScreenState extends State<MarjaneScreen> {
             color: Colors.white,
           ),
           child: Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
+            baseColor: MarjaneColors.secondary.withOpacity(0.3),
+            highlightColor: MarjaneColors.secondary.withOpacity(0.1),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

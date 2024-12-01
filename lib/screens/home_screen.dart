@@ -1,7 +1,14 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_delivery_app/screens/points_history_screen.dart';
+import 'package:my_delivery_app/models/supermarket.dart';
+import 'package:my_delivery_app/screens/services_screen.dart';
+import 'package:my_delivery_app/screens/supermarket_details_screen.dart';
+import 'package:my_delivery_app/screens/welcome_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:badges/badges.dart' as badges;
+
 import 'package:my_delivery_app/screens/cart_screen.dart';
 import 'package:my_delivery_app/screens/marjane_screen.dart';
 import 'package:my_delivery_app/screens/medicine_screen.dart';
@@ -9,24 +16,18 @@ import 'package:my_delivery_app/screens/carrefour_screen.dart';
 import 'package:my_delivery_app/screens/profile_screen.dart';
 import 'package:my_delivery_app/screens/search_screen.dart';
 import 'package:my_delivery_app/screens/traditional_market_screen.dart';
+import 'package:my_delivery_app/screens/points_history_screen.dart';
+
 import 'package:my_delivery_app/services/location_service.dart';
 import 'package:my_delivery_app/services/marjane_service.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:my_delivery_app/services/cart_service.dart';
-import 'package:badges/badges.dart' as badges;
-import 'package:my_delivery_app/models/category.dart';
-import 'package:my_delivery_app/models/product.dart';
 import 'package:my_delivery_app/services/auth_service.dart';
 import 'package:my_delivery_app/services/firestore_service.dart';
 
-class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
-  static const Color textDark = Color(0xFF2E3333);
-  static const Color textLight = Color(0xFF585C5C);
-  static const Color accent = Color(0xFFFF8000);
-}
+import 'package:my_delivery_app/models/category.dart';
+import 'package:my_delivery_app/models/product.dart';
+
+import 'package:easy_localization/easy_localization.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -42,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedCity = 'Loading...';
   List<Category> _randomCategories = [];
   Map<String, List<Product>> _categoryProducts = {};
-  bool _isFirstTimeAddToCart = true;
   Stream<int>? _userPointsStream;
   int _currentPoints = 0;
 
@@ -71,9 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final userId = authService.currentUser?.uid;
     if (userId != null) {
       _userPointsStream = _firestoreService.getUserPointsStream(userId);
-      // Fetch initial points
       _currentPoints = await _firestoreService.getUserPoints(userId);
-      setState(() {}); // Trigger a rebuild with initial points
+      setState(() {});
     }
   }
 
@@ -98,11 +97,58 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     return Scaffold(
-      backgroundColor: DeliverooColors.background,
+      backgroundColor: Color(0xFFE0D5B7), // Light Gold
+      appBar: AppBar(
+        backgroundColor: Color(0xFFD9251D), // Red
+        automaticallyImplyLeading: false, // This line is important
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => WelcomeScreen()),
+            );
+          },
+        ),
+        title: GestureDetector(
+          onTap: () => _showBottomMenu(context),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Morjib',
+                style: GoogleFonts.poppins(
+                  textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+                ),
+              ),
+              SizedBox(width: 4),
+              Icon(
+                Icons.arrow_drop_down,
+                color: Colors.white,
+                size: 28,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Row(
+              children: [
+                _buildPointsDisplay(),
+                SizedBox(width: 8),
+                _buildProfileIcon(),
+                SizedBox(width: 8),
+                _buildCartIcon(),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(),
+          SliverToBoxAdapter(child: _buildAddressBar()),
           SliverToBoxAdapter(child: _buildSearchBar()),
           SliverToBoxAdapter(child: _buildCategories()),
           _isLoading || _isLoadingProducts
@@ -118,16 +164,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       floating: true,
       snap: true,
       elevation: 2,
-      backgroundColor: DeliverooColors.primary,
-      title: Text(
-        'DeliverGo',
-        style: GoogleFonts.poppins(
-          textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+      backgroundColor: Color(0xFFD9251D), // Red
+      automaticallyImplyLeading: false,
+      title: GestureDetector(
+        onTap: () => _showBottomMenu(context),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Morjib',
+              style: GoogleFonts.poppins(
+                textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+              ),
+            ),
+            SizedBox(width: 4),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 28,
+            ),
+          ],
         ),
       ),
       actions: [
@@ -144,6 +207,98 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showBottomMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Color(0xFF585C5C).withOpacity(0.3), // Light text color
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              _buildBottomMenuItem(
+                context,
+                Icons.home_outlined,
+                Icons.home,
+                'Home',
+                'Explore services',
+                    () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => WelcomeScreen()),
+                  );
+                },
+              ),
+              _buildBottomMenuItem(
+                context,
+                Icons.restaurant_outlined,
+                Icons.restaurant,
+                'Traditionnel',
+                'Order local cuisine',
+                    () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => TraditionalMarketScreen(location: 'casablanca')),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomMenuItem(BuildContext context, IconData outlinedIcon, IconData filledIcon, String title, String subtitle, VoidCallback onTap) {
+    return ListTile(
+      leading: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Color(0xFFE0D5B7), // Light Gold
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(outlinedIcon, color: Color(0xFFD9251D)), // Red
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2E3333), // Dark text color
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          color: Color(0xFF585C5C), // Light text color
+        ),
+      ),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF585C5C)), // Light text color
+      onTap: onTap,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      tileColor: Colors.transparent,
+      hoverColor: Color(0xFFE0D5B7).withOpacity(0.1), // Light Gold
     );
   }
 
@@ -171,15 +326,15 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Icon(
                   Icons.star,
-                  color: DeliverooColors.accent,
+                  color: Color(0xFFD9B382), // Gold
                   size: 16,
                 ),
-                SizedBox(width: 4),
+                SizedBox(width: 0),
                 Text(
                   '$points pts',
                   style: GoogleFonts.poppins(
                     textStyle: TextStyle(
-                      color: DeliverooColors.primary,
+                      color: Color(0xFFD9251D), // Red 
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -206,14 +361,14 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         child: Icon(
           Icons.person,
-          color: DeliverooColors.primary,
+          color: Color(0xFFD9251D), // Red
           size: 20,
         ),
       ),
     );
   }
 
-Widget _buildCartIcon() {
+  Widget _buildCartIcon() {
     return Consumer<CartService>(
       builder: (context, cart, child) {
         return GestureDetector(
@@ -234,7 +389,7 @@ Widget _buildCartIcon() {
             ),
             badgeStyle: badges.BadgeStyle(
               shape: badges.BadgeShape.circle,
-              badgeColor: DeliverooColors.accent,
+              badgeColor: Color(0xFFD9B382), // Gold
               padding: EdgeInsets.all(5),
               borderRadius: BorderRadius.circular(4),
               borderSide: BorderSide.none,
@@ -248,8 +403,8 @@ Widget _buildCartIcon() {
               radius: 16,
               backgroundColor: Colors.white,
               child: Icon(
-                Icons.shopping_basket,
-                color: DeliverooColors.primary,
+                Icons.shopping_bag_outlined,
+                color: Color(0xFFD9251D), // Red
                 size: 20,
               ),
             ),
@@ -259,6 +414,29 @@ Widget _buildCartIcon() {
     );
   }
 
+  Widget _buildAddressBar() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Color(0xFFD9B382).withOpacity(0.8), // Gold
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.location_on, color: Colors.white),
+          SizedBox(width: 8),
+          Text(
+            _selectedCity,
+            style: GoogleFonts.playfairDisplay(
+              textStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSearchBar() {
     return Container(
@@ -267,7 +445,7 @@ Widget _buildCartIcon() {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: DeliverooColors.primary,
+            color: Color(0xFFD9251D), // Red
             offset: Offset(0, 3),
             blurRadius: 0,
           ),
@@ -279,14 +457,14 @@ Widget _buildCartIcon() {
           onPressed: () => _navigateToSearchScreen(context),
           icon: Icon(Icons.search, size: 18, color: const Color.fromARGB(255, 60, 60, 60)),
           label: Text(
-            'Search in Marjane, Carrefour & more',
+            'Search in Carrefour & more',
             style: GoogleFonts.poppins(
-              textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DeliverooColors.primary),
+              textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFFD9251D)), // Red
             ),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: DeliverooColors.primary,
-            side: BorderSide(color: DeliverooColors.primary, width: 2),
+            foregroundColor: Color(0xFFD9251D), // Red
+            side: BorderSide(color: Color(0xFFD9251D), width: 2), // Red
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -297,7 +475,7 @@ Widget _buildCartIcon() {
       ),
     );
   }
-  
+
   void _navigateToSearchScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -315,26 +493,164 @@ Widget _buildCartIcon() {
     );
   }
 
-  Widget _buildCategories() {
-    return Container(
-      height: 140,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _buildCategoryItem('Marjane', 'assets/images/marjane.png', () {
-            _navigateWithFadeTransition(MarjaneScreen(location: 'casablanca'));
-          }),
+Widget _buildCategories() {
+  return Container(
+    height: 200,
+    child: FutureBuilder<List<Supermarket>>(
+      future: _firestoreService.getSupermarkets(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        
+        List<Widget> supermarketItems = [
+          SizedBox(width: 16), // Add left padding here
           _buildCategoryItem('Carrefour', 'assets/images/carrefour.jpg', () {
             _navigateWithFadeTransition(CarrefourScreen(location: 'casablanca'));
           }),
-          _buildCategoryItem('Pharmacy', 'assets/images/pharmacy.jpg', () {
-            _navigateWithFadeTransition(MedicineScreen());
+          SizedBox(width: 16), // Increase padding between Carrefour and Marjane
+          _buildCategoryItem('Marjane', 'assets/images/marjane.png', () {
+            _navigateWithFadeTransition(MarjaneScreen(location: 'casablanca'));
           }),
-          _buildCategoryItem('Traditional', 'assets/images/traditional.png', () {
-            _navigateWithFadeTransition(TraditionalMarketScreen(location: 'casablanca'));
-          }),
-        ],
+          SizedBox(width: 16), // Add padding after Marjane
+        ];
+
+        if (snapshot.hasData) {
+          supermarketItems.addAll(snapshot.data!.map((supermarket) => 
+            Padding(
+              padding: EdgeInsets.only(right: 16), // Add right padding to each dynamic item
+              child: _buildDynamicSupermarketItem(supermarket),
+            )
+          ));
+        }
+
+        return ListView(
+          scrollDirection: Axis.horizontal,
+          children: supermarketItems,
+        );
+
+      },
+    ),
+  );
+}
+
+Widget _buildDynamicSupermarketItem(Supermarket supermarket) {
+    return GestureDetector(
+      onTap: () => _navigateToSupermarketDetails(context, supermarket),
+      child: Container(
+        width: 160,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Color(0xFFD9B382).withOpacity(0.5),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Color(0xFFD9B382),
+                  width: 2,
+                ),
+              ),
+              child: ClipOval(
+                child: Image.network(
+                  supermarket.imageUrl,
+                  width: 86,
+                  height: 86,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              supermarket.name,
+              style: GoogleFonts.playfairDisplay(
+                textStyle: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD9251D),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+void _navigateToSupermarketDetails(BuildContext context, Supermarket supermarket) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SupermarketDetailsScreen(supermarket: supermarket),
+      ),
+    );
+  }
+
+
+
+
+  Widget _buildCategoryItem(String label, String icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 160,
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Color(0xFFD9B382).withOpacity(0.5), // Gold
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Color(0xFFD9B382), // Gold
+                  width: 2,
+                ),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  icon,
+                  width: 86,
+                  height: 86,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              label,
+              style: GoogleFonts.playfairDisplay(
+                textStyle: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD9251D), // Red
+                  letterSpacing: 0.5,
+                ),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -346,41 +662,6 @@ Widget _buildCartIcon() {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-      ),
-    );
-  }
-
-  Widget _buildCategoryItem(String label, String icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 90,
-        margin: EdgeInsets.only(right: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: DeliverooColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage(icon),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: DeliverooColors.textDark),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -397,12 +678,11 @@ Widget _buildCartIcon() {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  _truncateWithEllipsis(category.name, 14),
+                child: Text(_truncateWithEllipsis(category.name, 14),
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: DeliverooColors.textDark,
+                    color: Color(0xFF2E3333), // Dark Text Color
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -411,7 +691,7 @@ Widget _buildCartIcon() {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MarjaneScreen(location: 'casablanca')),
+                    MaterialPageRoute(builder: (context) => CarrefourScreen(location: 'casablanca')),
                   );
                 },
                 child: Text(
@@ -419,7 +699,7 @@ Widget _buildCartIcon() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: DeliverooColors.primary,
+                    color: Color(0xFFD9251D), // Red 
                   ),
                 ),
               ),
@@ -446,124 +726,6 @@ Widget _buildCartIcon() {
         : '${text.substring(0, maxLength)}...';
   }
 
-  void _showFirstTimeCartDialog(Product product) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Item Added to Cart',
-                style: GoogleFonts.poppins(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: DeliverooColors.textDark,
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Would you like to pay now or continue shopping?',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: DeliverooColors.textLight,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 30),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.fromARGB(255, 1, 177, 163),
-                            offset: Offset(0, 4),
-                            blurRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => CartScreen()),
-                          );
-                        },
-                        child: Text(
-                          'Buy now?',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: DeliverooColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: DeliverooColors.primary,
-                            offset: Offset(0, 4),
-                            blurRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'Continue',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: DeliverooColors.primary,
-                          side: BorderSide(color: DeliverooColors.primary, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildProductCard(Product product) {
     return Container(
       width: 200,
@@ -572,13 +734,10 @@ Widget _buildCartIcon() {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: Offset(0, 5),
-          ),
-        ],
+        border: Border.all(
+          color: Color(0xFFD9B382).withOpacity(0.5), // Gold
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,7 +745,7 @@ Widget _buildCartIcon() {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(14.5)),
                 child: Image.network(
                   product.imageUrl,
                   width: 200,
@@ -600,7 +759,7 @@ Widget _buildCartIcon() {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: DeliverooColors.primary.withOpacity(0.9),
+                    color: Color(0xFFD9251D).withOpacity(0.9), // Red
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -627,21 +786,21 @@ Widget _buildCartIcon() {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: DeliverooColors.textDark,
+                      color: Color(0xFF2E3333), // Dark text color
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Row(
                     children: [
-                      Icon(Icons.star, color: DeliverooColors.accent, size: 16),
+                      Icon(Icons.star, color: Color(0xFFD9B382), size: 16), // Gold
                       SizedBox(width: 4),
                       Text(
                         product.averageRating.toStringAsFixed(1),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: DeliverooColors.textLight,
+                          color: Color(0xFF585C5C), // Light text color
                         ),
                       ),
                       SizedBox(width: 8),
@@ -649,7 +808,7 @@ Widget _buildCartIcon() {
                         '(${product.numberOfRatings})',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: DeliverooColors.textLight,
+                          color: Color(0xFF585C5C), // Light text color
                         ),
                       ),
                     ],
@@ -662,7 +821,7 @@ Widget _buildCartIcon() {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: DeliverooColors.primary,
+                            color: Color(0xFFD9B382), // Gold
                             offset: Offset(0, 4),
                             blurRadius: 0,
                           ),
@@ -675,14 +834,14 @@ Widget _buildCartIcon() {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Added to cart',
+                                'added_to_cart'.tr(),
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.white,
                                 ),
                               ),
-                              backgroundColor: DeliverooColors.primary,
+                              backgroundColor: Color(0xFFD9251D), // Red
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -691,10 +850,10 @@ Widget _buildCartIcon() {
                           );
                         },
                         icon: Icon(Icons.add_shopping_cart, size: 18),
-                        label: Text('Add to Cart', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        label: Text('add_to_cart'.tr(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: DeliverooColors.primary,
-                          side: BorderSide(color: DeliverooColors.primary, width: 2),
+                          foregroundColor: Color(0xFFD9251D), // Red
+                          side: BorderSide(color: Color(0xFFD9251D), width: 2), // Red
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -715,8 +874,8 @@ Widget _buildCartIcon() {
 
   Widget _buildShimmerEffect() {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: Color(0xFFD9B382).withOpacity(0.3), // Gold
+      highlightColor: Color(0xFFD9B382).withOpacity(0.1), // Gold
       child: Column(
         children: List.generate(3, (index) => _buildShimmerSection()),
       ),

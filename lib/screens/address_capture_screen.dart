@@ -9,12 +9,13 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 
 class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
+  static const Color primary = Color(0xFF046307);
   static const Color secondary = Color(0xFF2E3333);
   static const Color background = Color(0xFFF9FAFA);
   static const Color cardBackground = Colors.white;
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFDAA520);
 }
 
 class AddressCaptureScreen extends StatefulWidget {
@@ -66,7 +67,7 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
         if (!userEnabledLocation) {
           throw Exception('Location services are required for this app.');
         }
-        return; // The app will retry when it resumes
+        return;
       }
 
       permission = await Geolocator.checkPermission();
@@ -170,13 +171,7 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [DeliverooColors.primary, DeliverooColors.primary.withOpacity(0.8)],
-          ),
-        ),
+        color: DeliverooColors.primary,
         child: SafeArea(
           child: _isLoading
               ? _buildLoadingWidget()
@@ -245,62 +240,62 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
           padding: const EdgeInsets.all(16.0),
           child: Text(
             'Confirm Your Address',
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.playfairDisplay(
               textStyle: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
-      Expanded(
-        child: Container(
-          margin: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: DeliverooColors.cardBackground,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _currentPosition ?? LatLng(0, 0),
-                initialZoom: 16.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DeliverooColors.cardBackground,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 5),
                 ),
-                if (_currentPosition != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        width: 80.0,
-                        height: 80.0,
-                        point: _currentPosition!,
-                        child: Icon(
-                          Icons.location_on,
-                          color: DeliverooColors.primary,
-                          size: 40.0,
-                        ),
-                      ),
-                    ],
-                  ),
               ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _currentPosition ?? LatLng(0, 0),
+                  initialZoom: 16.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    subdomains: ['a', 'b', 'c'],
+                  ),
+                  if (_currentPosition != null)
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          width: 80.0,
+                          height: 80.0,
+                          point: _currentPosition!,
+                          child: Icon(
+                            Icons.location_on,
+                            color: DeliverooColors.primary,
+                            size: 40.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
         Container(
           padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -328,46 +323,57 @@ class _AddressCaptureScreenState extends State<AddressCaptureScreen> with Widget
                 ),
               ),
               SizedBox(height: 24),
-              ElevatedButton(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    'Confirm Address',
-                    style: GoogleFonts.poppins(
-                      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: DeliverooColors.accent,
+                      offset: Offset(0, 4),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'Confirm Address',
+                      style: GoogleFonts.poppins(
+                        textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: DeliverooColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: DeliverooColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
                   ),
-                  elevation: 5,
+                  onPressed: () async {
+                    if (_currentPosition != null) {
+                      try {
+                        await _firestoreService.saveUserAddress(
+                          AuthService().currentUser!.uid,
+                          _currentAddress,
+                          _currentPosition!.latitude,
+                          _currentPosition!.longitude,
+                        );
+                        Navigator.of(context).pushReplacementNamed('/home');
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error saving address: $e')),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Unable to save address. Please try again.')),
+                      );
+                    }
+                  },
                 ),
-                onPressed: () async {
-    if (_currentPosition != null) {
-      try {
-        await _firestoreService.saveUserAddress(
-          AuthService().currentUser!.uid,
-          _currentAddress,
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
-        );
-        Navigator.of(context).pushReplacementNamed('/home');
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving address: $e')),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save address. Please try again.')),
-      );
-    }
-  },
-
               ),
             ],
           ),

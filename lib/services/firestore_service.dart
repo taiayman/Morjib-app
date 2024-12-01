@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_delivery_app/models/product.dart';
 import 'package:my_delivery_app/models/restaurant.dart';
+import 'package:my_delivery_app/models/supermarket.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-   Future<void> createUser(String uid, String email, String name, String phone) async {
+  Future<void> createUser(String uid, String email, String name, String phone) async {
     await _firestore.collection('users').doc(uid).set({
       'email': email,
       'name': name,
@@ -20,7 +21,6 @@ class FirestoreService {
     return doc.data() as Map<String, dynamic>;
   }
 
-
   Future<List<QueryDocumentSnapshot>> searchProducts(String query) async {
     QuerySnapshot querySnapshot = await _firestore.collection('products')
         .where('name', isGreaterThanOrEqualTo: query)
@@ -29,9 +29,9 @@ class FirestoreService {
     return querySnapshot.docs;
   }
 
-  Future<List<QueryDocumentSnapshot>> getSupermarkets() async {
+    Future<List<Supermarket>> getSupermarkets() async {
     QuerySnapshot querySnapshot = await _firestore.collection('supermarkets').get();
-    return querySnapshot.docs;
+    return querySnapshot.docs.map((doc) => Supermarket.fromFirestore(doc)).toList();
   }
 
   Future<List<QueryDocumentSnapshot>> getShops() async {
@@ -80,14 +80,13 @@ class FirestoreService {
       'seller_type': sellerType,
     });
 
-    // Calculate and add loyalty points (1 point per 10 MAD spent)
     int pointsEarned = (totalAmount / 10).floor();
     await addPoints(userId, pointsEarned);
 
     return orderRef.id;
   }
 
-    Stream<int> getUserPointsStream(String userId) {
+  Stream<int> getUserPointsStream(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -95,7 +94,6 @@ class FirestoreService {
         .map((snapshot) => snapshot.data()?['points'] ?? 0);
   }
 
-  // Favorites methods
   Future<void> addToFavorites(String userId, String productId) async {
     await _firestore.collection('users').doc(userId).collection('favorites').doc(productId).set({
       'added_at': FieldValue.serverTimestamp(),
@@ -126,7 +124,6 @@ class FirestoreService {
     return doc.exists;
   }
 
-  // Order history methods
   Future<List<QueryDocumentSnapshot>> getOrderHistory(String userId) async {
     QuerySnapshot querySnapshot = await _firestore
         .collection('orders')
@@ -146,15 +143,12 @@ class FirestoreService {
       'updated_at': FieldValue.serverTimestamp(),
     });
 
-    // Fetch the user ID associated with this order
     DocumentSnapshot orderDoc = await _firestore.collection('orders').doc(orderId).get();
     String userId = orderDoc['user_id'];
 
-    // Fetch the user's FCM tokens
     DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
     List<String> fcmTokens = List<String>.from(userDoc['fcm_tokens'] ?? []);
 
-    // Send notifications to all user devices
     for (String token in fcmTokens) {
       await sendNotification(token, 'Order Update', 'Your order status has been updated to: $status');
     }
@@ -164,7 +158,6 @@ class FirestoreService {
     return _firestore.collection('orders').doc(orderId).snapshots();
   }
 
-  // Review methods
   Future<void> addReview(String productId, String userId, double rating, String comment) async {
     await _firestore.collection('products').doc(productId).collection('reviews').add({
       'user_id': userId,
@@ -173,7 +166,6 @@ class FirestoreService {
       'created_at': FieldValue.serverTimestamp(),
     });
 
-    // Update the average rating of the product
     await updateProductAverageRating(productId);
   }
 
@@ -205,7 +197,7 @@ class FirestoreService {
     return querySnapshot.docs;
   }
 
-    Future<void> saveUserAddress(String userId, String address, double latitude, double longitude) async {
+  Future<void> saveUserAddress(String userId, String address, double latitude, double longitude) async {
     await _firestore.collection('users').doc(userId).update({
       'address': address,
       'location': GeoPoint(latitude, longitude),
@@ -213,14 +205,12 @@ class FirestoreService {
     });
   }
   
-Future<bool> userHasAddress(String userId) async {
+  Future<bool> userHasAddress(String userId) async {
     DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
     Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
     return userData?['hasSetAddress'] ?? false;
   }
 
-
-  // FCM Token methods
   Future<void> saveUserFCMToken(String userId, String token) async {
     await _firestore.collection('users').doc(userId).update({
       'fcm_tokens': FieldValue.arrayUnion([token]),
@@ -233,15 +223,12 @@ Future<bool> userHasAddress(String userId) async {
     });
   }
 
-  // Helper method to send FCM notification (you'll need to implement this using a server or cloud function)
   Future<void> sendNotification(String token, String title, String body) async {
-    // Implement FCM sending logic here (typically done on the server-side)
     print('Sending notification to token: $token');
     print('Title: $title');
     print('Body: $body');
   }
 
-  // Loyalty points methods
   Future<void> addPoints(String userId, int points) async {
     await _firestore.collection('users').doc(userId).update({
       'points': FieldValue.increment(points),
@@ -288,7 +275,6 @@ Future<bool> userHasAddress(String userId) async {
     return querySnapshot.docs;
   }
 
-  // Chat-related methods
   Future<List<QueryDocumentSnapshot>> getUserChats(String userId) async {
     QuerySnapshot querySnapshot = await _firestore
         .collection('chats')
@@ -305,7 +291,6 @@ Future<bool> userHasAddress(String userId) async {
     });
   }
  
-  // User interaction methods
   Future<void> recordProductView(String userId, String productId, String category) async {
     await _firestore
         .collection('users')
@@ -328,19 +313,37 @@ Future<bool> userHasAddress(String userId) async {
     return await _firestore.collection('products').doc(productId).get();
   }
 
- 
-
   Future<void> updateUserPoints(String uid, int points) async {
     await _firestore.collection('users').doc(uid).update({
       'points': points,
     });
   }
 
-    Future<void> updateUserInfo(String uid, String name, String phone, String address) async {
+  Future<void> updateUserInfo(String uid, String name, String phone, String address) async {
     await _firestore.collection('users').doc(uid).update({
       'name': name,
       'phone': phone,
       'address': address,
     });
   }
+
+  Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).update(data);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+
+  Future<List<Product>> getSupermarketProducts(String supermarketId) async {
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('products')
+        .where('supermarketId', isEqualTo: supermarketId)
+        .get();
+    return querySnapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
+  }
+
+  
 }

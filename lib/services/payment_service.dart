@@ -1,49 +1,28 @@
 import 'dart:convert';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http; 
 
 class PaymentService {
-  static const String _backendUrl = 'https://backend-url.com';
-  Future<void> initializeStripe() async {
-    Stripe.publishableKey = 'publishable_key_here'; 
+  static const String _backendUrl = 'https://backend-url.com'; // **Replace with your actual backend URL when you have one**
+
+  Future<String?> processCMIPayment({
+    required double amount,
+    required String currency,
+    required String cardNumber,
+    required String expiryDate,
+    required String cvv,
+  }) async {
+    // **SIMULATED CMI Payment Processing (DO NOT USE IN PRODUCTION)**
+    print('Processing CMI payment...');
+    print('Amount: $amount $currency');
+    print('Card Number: $cardNumber');
+    print('Expiry Date: $expiryDate');
+    print('CVV: $cvv');
+
+    // Simulate a delay for payment processing
+    await Future.delayed(Duration(seconds: 2));
+
+    // Simulate a successful payment 
+    print('CMI payment successful!');
+    return 'simulated_cmi_payment_id'; // Return a simulated payment ID
   }
-
-  Future<PaymentIntent> processPayment(double amount, String currency) async {
-    try {
-      
-      final response = await http.post(
-        Uri.parse('$_backendUrl/create-payment-intent'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'amount': (amount * 100).toInt(), 
-          'currency': currency,
-        }),
-      );
-
-      final paymentIntentData = json.decode(response.body);
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntentData['client_secret'],
-          merchantDisplayName: 'My delivery',
-        ),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      return PaymentIntent(
-        id: paymentIntentData['id'],
-        status: paymentIntentData['status'],
-      );
-    } catch (e) {
-      print('Error processing payment: $e');
-      rethrow;
-    }
-  }
-}
-
-class PaymentIntent {
-  final String id;
-  final String status;
-
-  PaymentIntent({required this.id, required this.status});
 }

@@ -8,14 +8,15 @@ import '../models/product.dart';
 import '../models/category.dart';
 import 'package:badges/badges.dart' as badges;
 import 'cart_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
-  static const Color accent = Color(0xFFFF8000);
+  static const Color accent = Color(0xFFD9B382);
 }
 
 class SearchCarrefourScreen extends StatefulWidget {
@@ -165,9 +166,9 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
       snap: true,
       elevation: 2,
       backgroundColor: DeliverooColors.primary,
-      iconTheme: IconThemeData(color: Colors.white), // This sets the back arrow color to white
+      iconTheme: IconThemeData(color: Colors.white),
       title: Text(
-        'Search Carrefour',
+        'search_carrefour'.tr(),
         style: GoogleFonts.poppins(
           textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
         ),
@@ -196,7 +197,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                 ),
                 badgeContent: Text(
                   '${cart.itemCount}',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: DeliverooColors.primary, fontWeight: FontWeight.bold),
                 ),
                 child: IconButton(
                   icon: Icon(Icons.shopping_basket, color: Colors.white),
@@ -223,9 +224,9 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: DeliverooColors.primary,
+              color: DeliverooColors.primary.withOpacity(0.3),
               offset: Offset(0, 4),
-              blurRadius: 0,
+              blurRadius: 8,
             ),
           ],
         ),
@@ -233,7 +234,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
           controller: _searchController,
           onChanged: _performSearch,
           decoration: InputDecoration(
-            hintText: 'Search Carrefour products',
+            hintText: 'search_carrefour_products'.tr(),
             prefixIcon: Icon(Icons.search, color: DeliverooColors.primary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -259,15 +260,14 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
       ),
     );
   }
-
-    Widget _buildProductCard(Product product) {
+Widget _buildProductCard(Product product) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: DeliverooColors.primary.withOpacity(0.1),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -283,7 +283,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                 child: Image.network(
                   product.imageUrl,
                   width: double.infinity,
-                  height: 90,
+                  height: 120,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -293,7 +293,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: DeliverooColors.primary.withOpacity(0.9),
+                    color: DeliverooColors.secondary.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -301,7 +301,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: DeliverooColors.primary,
                     ),
                   ),
                 ),
@@ -329,7 +329,7 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                     children: [
                       Icon(Icons.star, color: DeliverooColors.accent, size: 14),
                       SizedBox(width: 4),
-                        Text(
+                      Text(
                         product.averageRating.toStringAsFixed(1),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
@@ -345,56 +345,48 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
                           color: DeliverooColors.textLight,
                         ),
                       ),
-
                     ],
                   ),
                   SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: DeliverooColors.primary,
-                            offset: Offset(0, 4),
-                            blurRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                         Provider.of<CartService>(context, listen: false)
-    .addItem(product.id, product.name, product.price, product.imageUrl, product.sellerType); // Pass sellerType
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Added to cart',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              backgroundColor: DeliverooColors.primary,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Provider.of<CartService>(context, listen: false)
+                            .addItem(product.id, product.name, product.price, product.imageUrl, product.sellerType);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'added_to_cart'.tr(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
                               ),
                             ),
-                          );
-                        },
-                        icon: Icon(Icons.add_shopping_cart, size: 16),
-                        label: Text('Add to Cart', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: DeliverooColors.primary,
-                          side: BorderSide(color: DeliverooColors.primary, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            backgroundColor: DeliverooColors.primary,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          backgroundColor: Colors.white,
+                        );
+                      },
+                      child: Text(
+                        'add_to_cart'.tr(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: DeliverooColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
@@ -407,92 +399,24 @@ class _SearchCarrefourScreenState extends State<SearchCarrefourScreen> {
     );
   }
 
-
   Widget _buildCategoryShimmerEffect() {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Column(
-        children: [
-          GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemCount: 6,
-            itemBuilder: (context, index) => _buildProductShimmer(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBoxShimmer() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+      baseColor: DeliverooColors.secondary.withOpacity(0.3),
+      highlightColor: DeliverooColors.secondary.withOpacity(0.1),
       child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        height: 100,
+        color: Colors.white,
       ),
     );
   }
 
   Widget _buildProductShimmer() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+    return Shimmer.fromColors(
+      baseColor: DeliverooColors.secondary.withOpacity(0.3),
+      highlightColor: DeliverooColors.secondary.withOpacity(0.1),
+      child: Container(
+        height: 200,
         color: Colors.white,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 16,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: 100,
-                    height: 16,
-                    color: Colors.white,
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

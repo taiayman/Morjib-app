@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:my_delivery_app/screens/address_capture_screen.dart';
+import 'package:my_delivery_app/screens/forgot_password_screen.dart';
+import 'package:my_delivery_app/screens/welcome_screen.dart';
+import 'package:my_delivery_app/screens/phone_auth_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
-import 'screens/supermarket_screen.dart';
 import 'screens/traditional_market_screen.dart';
 import 'screens/shops_screen.dart';
 import 'screens/checkout_screen.dart';
@@ -28,22 +31,31 @@ import 'services/recommendation_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await EasyLocalization.ensureInitialized();
 
   final notificationService = NotificationService();
   await notificationService.init();
 
   final paymentService = PaymentService();
-  await paymentService.initializeStripe();
+  // Removed: await paymentService.initializeStripe(); 
 
   final chatService = ChatService();
   final recommendationService = RecommendationService();
 
-  runApp(MyApp(
-    notificationService: notificationService,
-    paymentService: paymentService,
-    chatService: chatService,
-    recommendationService: recommendationService,
-  ));
+  runApp(
+    EasyLocalization(
+      supportedLocales: [Locale('en', 'US'), Locale('fr', 'FR'), Locale('ar')],
+      path: 'assets/translations', 
+      fallbackLocale: Locale('fr', 'FR'),
+      startLocale: Locale('fr', 'FR'),
+      child: MyApp(
+        notificationService: notificationService,
+        paymentService: paymentService,
+        chatService: chatService,
+        recommendationService: recommendationService,
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -82,17 +94,21 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         debugShowCheckedModeBanner: false,
-        home: AuthWrapper(),
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        home: WelcomeScreen(), 
         routes: {
+          '/welcome': (context) => WelcomeScreen(),
           '/home': (context) => HomeScreen(),
+          '/phone-auth': (context) => PhoneAuthScreen(email: '', password: ''),
           '/login': (context) => LoginScreen(),
           '/register': (context) => RegisterScreen(),
-          '/profile': (context) => ProfileScreen(),
-          '/supermarkets': (context) => SupermarketScreen(),
-          '/traditional_market': (context) => TraditionalMarketScreen(location: 'casablanca'),
+          '/profile': (context) => ProfileScreen(),          '/traditional_market': (context) => TraditionalMarketScreen(location: 'casablanca'),
           '/shops': (context) => ShopsScreen(),
           '/checkout': (context) => CheckoutScreen(),
           '/search': (context) => SearchScreen(),
+          '/forgot-password': (context) => ForgotPasswordScreen(),
           '/favorites': (context) => FavoritesScreen(),
           '/order_history': (context) => OrderHistoryScreen(),
           '/order_confirmation': (context) => OrderConfirmationScreen(orderId: ModalRoute.of(context)!.settings.arguments as String),

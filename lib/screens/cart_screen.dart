@@ -1,32 +1,36 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
 import '../models/cart_item.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
+class CarrefourColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFD9B382);
 }
 
 class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: CarrefourColors.background,
       appBar: AppBar(
         title: Text(
-          'Your Cart',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
+          'your_cart'.tr(),
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        backgroundColor: DeliverooColors.primary,
+        backgroundColor: CarrefourColors.primary,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -50,22 +54,22 @@ class CartScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 100, color: Color(0xFFE0E0E0)),
+          Icon(Icons.shopping_bag_outlined, size: 100, color: CarrefourColors.accent.withOpacity(0.5)),
           SizedBox(height: 20),
           Text(
-            'Your cart is empty',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
+            'cart_empty'.tr(),
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: DeliverooColors.textDark,
+              color: CarrefourColors.textDark,
             ),
           ),
           SizedBox(height: 10),
           Text(
-            'Add some delicious items to get started!',
+            'add_items_to_start'.tr(),
             style: GoogleFonts.poppins(
               fontSize: 16,
-              color: DeliverooColors.textLight,
+              color: CarrefourColors.textLight,
             ),
           ),
         ],
@@ -83,115 +87,119 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItem(BuildContext context, CartItem item, CartService cart, String itemId) {
-    return Dismissible(
-      key: Key(item.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20),
-        color: Colors.red,
-        child: Icon(Icons.delete, color: Colors.white),
+Widget _buildCartItem(BuildContext context, CartItem item, CartService cart, String itemId) {
+  return Dismissible(
+    key: Key(item.id),
+    direction: DismissDirection.endToStart,
+    background: Container(
+      alignment: Alignment.centerRight,
+      padding: EdgeInsets.only(right: 20),
+      decoration: BoxDecoration(
+        color: CarrefourColors.primary,
+        borderRadius: BorderRadius.circular(12),
       ),
-      onDismissed: (direction) {
-        cart.removeItem(itemId);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${item.name} removed from cart'),
-            duration: Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'UNDO',
-              onPressed: () {
-                cart.addItem(itemId, item.name, item.price, item.imageUrl, item.sellerType);
-              },
+      child: Icon(Icons.delete_outline, color: Colors.white, size: 28),
+    ),
+    onDismissed: (direction) {
+      cart.removeItem(itemId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('item_removed_from_cart'.tr(args: [item.name])),
+          duration: Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'undo'.tr(),
+            onPressed: () {
+              cart.addItem(itemId, item.name, item.price, item.imageUrl, item.sellerType);
+            },
+          ),
+        ),
+      );
+    },
+    child: Container(
+      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: CarrefourColors.accent.withOpacity(0.2), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: NetworkImage(item.imageUrl),
+                ),
+              ),
             ),
-          ),
-        );
-      },
-      child: Card(
-        margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Padding(
-          padding: EdgeInsets.all(15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: NetworkImage(item.imageUrl),
+            SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: CarrefourColors.textDark,
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: DeliverooColors.textDark,
-                      ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${item.price.toStringAsFixed(2)} MAD',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: CarrefourColors.primary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${item.price.toStringAsFixed(2)} MAD',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: DeliverooColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _buildQuantityButton(Icons.remove, () => cart.decrementQuantity(itemId)),
-                        SizedBox(width: 10),
-                        Text(
-                          '${item.quantity}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: DeliverooColors.textDark,
-                          ),
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _buildQuantityButton(Icons.remove, () => cart.decrementQuantity(itemId)),
+                      SizedBox(width: 15),
+                      Text(
+                        '${item.quantity}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: CarrefourColors.textDark,
                         ),
-                        SizedBox(width: 10),
-                        _buildQuantityButton(Icons.add, () => cart.incrementQuantity(itemId)),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      SizedBox(width: 15),
+                      _buildQuantityButton(Icons.add, () => cart.incrementQuantity(itemId)),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildQuantityButton(IconData icon, VoidCallback onPressed) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: DeliverooColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Icon(icon, size: 20, color: DeliverooColors.primary),
+Widget _buildQuantityButton(IconData icon, VoidCallback onPressed) {
+  return InkWell(
+    onTap: onPressed,
+    child: Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: CarrefourColors.accent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
-  }
-
-  Widget _buildCheckoutBar(BuildContext context) {
+      child: Icon(icon, size: 20, color: CarrefourColors.primary),
+    ),
+  );
+}  Widget _buildCheckoutBar(BuildContext context) {
     final cart = Provider.of<CartService>(context);
     return Container(
       padding: EdgeInsets.all(20),
@@ -199,7 +207,7 @@ class CartScreen extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: CarrefourColors.secondary.withOpacity(0.2),
             offset: Offset(0, -3),
             blurRadius: 10,
           ),
@@ -213,41 +221,54 @@ class CartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total',
+                  'total'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: DeliverooColors.textLight,
+                    color: CarrefourColors.textLight,
                   ),
                 ),
                 Text(
                   '${cart.totalAmount.toStringAsFixed(2)} MAD',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: DeliverooColors.textDark,
+                    color: CarrefourColors.textDark,
                   ),
                 ),
               ],
             ),
             SizedBox(width: 20),
             Expanded(
-              child: ElevatedButton(
-                onPressed: cart.items.isNotEmpty ? () {
-                  Navigator.pushNamed(context, '/checkout');
-                } : null,
-                child: Text(
-                  'Checkout',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: CarrefourColors.accent,
+                      offset: Offset(0, 4),
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: DeliverooColors.primary,
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                child: ElevatedButton(
+                  onPressed: cart.items.isNotEmpty ? () {
+                    Navigator.pushNamed(context, '/checkout');
+                  } : null,
+                  child: Text(
+                    'checkout'.tr(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: CarrefourColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
                   ),
                 ),
               ),

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
-import '../models/custom_user.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'phone_auth_screen.dart';
 
-class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
+class CarrefourColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
+  static const Color accent = Color(0xFFD9B382);
 }
 
 class RegisterScreen extends StatefulWidget {
@@ -21,20 +23,23 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
-  String _password = '';
   String _name = '';
   String _phone = '';
-  bool _isPasswordVisible = false;
+  String _password = '';
   bool _isLoading = false;
-
-  final FirestoreService _firestoreService = FirestoreService();
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
     return Scaffold(
-      backgroundColor: DeliverooColors.background,
+      backgroundColor: CarrefourColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: CarrefourColors.primary),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -43,26 +48,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 40),
+                SizedBox(height: 20),
                 Text(
-                  'FoodDash',
-                  style: GoogleFonts.poppins(
+                  'app_name'.tr(),
+                  style: GoogleFonts.playfairDisplay(
                     textStyle: TextStyle(
-                      color: DeliverooColors.primary,
+                      color: CarrefourColors.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 36,
+                      fontSize: 40,
                     ),
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 24),
                 Text(
-                  'Create Account',
-                  style: GoogleFonts.poppins(
+                  'create_account'.tr(),
+                  style: GoogleFonts.playfairDisplay(
                     textStyle: TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.w600,
-                      color: DeliverooColors.textDark,
+                      color: CarrefourColors.textDark,
                     ),
                   ),
                   textAlign: TextAlign.center,
@@ -74,11 +79,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       _buildTextField(
                         icon: Icons.person,
-                        hintText: 'Name',
+                        hintText: 'name'.tr(),
                         onSaved: (value) => _name = value!,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your name';
+                            return 'please_enter_name'.tr();
                           }
                           return null;
                         },
@@ -86,47 +91,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       SizedBox(height: 16),
                       _buildTextField(
                         icon: Icons.email,
-                        hintText: 'Email',
+                        hintText: 'email'.tr(),
                         onSaved: (value) => _email = value!,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
+                            return 'please_enter_email'.tr();
                           }
-                          // You can add more sophisticated email validation here
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                            return 'please_enter_valid_email'.tr();
+                          }
                           return null;
                         },
                       ),
                       SizedBox(height: 16),
                       _buildTextField(
                         icon: Icons.phone,
-                        hintText: 'Phone',
-                        onSaved: (value) => _phone = value!,
+                        hintText: 'phone'.tr() + ' (0612345678)',
+                        onSaved: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            _phone = '+212' + value.substring(1);
+                          }
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
+                            return 'please_enter_phone'.tr();
+                          }
+                          if (!RegExp(r'^0[567]\d{8}$').hasMatch(value)) {
+                            return 'please_enter_valid_moroccan_phone'.tr();
                           }
                           return null;
                         },
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
                       ),
                       SizedBox(height: 16),
                       _buildTextField(
                         icon: Icons.lock,
-                        hintText: 'Password',
+                        hintText: 'password'.tr(),
                         obscureText: !_isPasswordVisible,
                         onSaved: (value) => _password = value!,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
+                            return 'please_enter_password'.tr();
                           }
                           if (value.length < 6) {
-                            return 'Password must be at least 6 characters long';
+                            return 'password_length'.tr();
                           }
                           return null;
                         },
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            color: DeliverooColors.textLight,
+                            color: CarrefourColors.textLight,
                           ),
                           onPressed: () {
                             setState(() {
@@ -139,63 +158,147 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 SizedBox(height: 24),
-                ElevatedButton(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: _isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Register',
-                            style: GoogleFonts.poppins(
-                              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: CarrefourColors.accent.withOpacity(0.5),
+                        offset: Offset(0, 4),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              'register'.tr(),
+                              style: GoogleFonts.poppins(
+                                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                              ),
                             ),
-                          ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: DeliverooColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    elevation: 0,
-                  ),
-                  onPressed: _isLoading ? null : () async {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        _isLoading = true;
-                      });
-                      _formKey.currentState!.save();
-                      try {
-                        final CustomUser? user = await authService.registerWithEmailAndPassword(
-                          _email,
-                          _password,
-                          _name,
-                          _phone
-                        );
-                        if (user != null) {
-                          Navigator.of(context).pushReplacementNamed('/home');
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to register: ${e.toString()}'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      } finally {
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: CarrefourColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: _isLoading ? null : () async {
+                      if (_formKey.currentState!.validate()) {
                         setState(() {
-                          _isLoading = false;
+                          _isLoading = true;
                         });
+                        _formKey.currentState!.save();
+                        try {
+                          await authService.registerWithEmailAndPassword(_email, _password, _name, _phone, context);
+                          
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.white),
+                                    SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'registration_successful'.tr(),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            'verify_phone'.tr(),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              backgroundColor: CarrefourColors.primary,
+                              duration: Duration(seconds: 7),
+                              action: SnackBarAction(
+                                label: 'ok'.tr(),
+                                textColor: Colors.white,
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                },
+                              ),
+                            ),
+                          );
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => PhoneAuthScreen(email: _email, password: _password),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Container(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error, color: Colors.white),
+                                    SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        'registration_failed'.tr(args: [e.toString()]),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
+                        } finally {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
                       }
-                    }
-                  },
+                    },
+                  ),
                 ),
                 SizedBox(height: 16),
+                Text(
+                  'already_have_account'.tr(),
+                  style: GoogleFonts.poppins(
+                    textStyle: TextStyle(color: CarrefourColors.textDark),
+                  ),
+                ),
                 TextButton(
                   child: Text(
-                    'Already have an account? Login',
+                    'login'.tr(),
                     style: GoogleFonts.poppins(
-                      textStyle: TextStyle(color: DeliverooColors.primary, fontWeight: FontWeight.w500),
+                      textStyle: TextStyle(
+                        color: CarrefourColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   onPressed: () {
@@ -217,26 +320,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String? Function(String?) validator,
     bool obscureText = false,
     Widget? suffixIcon,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: DeliverooColors.textLight.withOpacity(0.5)),
+        border: Border.all(color: CarrefourColors.textLight.withOpacity(0.5)),
       ),
       child: TextFormField(
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: DeliverooColors.primary),
+          prefixIcon: Icon(icon, color: CarrefourColors.primary),
           hintText: hintText,
-          hintStyle: GoogleFonts.poppins(textStyle: TextStyle(color: DeliverooColors.textLight)),
+          hintStyle: GoogleFonts.poppins(color: CarrefourColors.textLight),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           suffixIcon: suffixIcon,
         ),
-        style: GoogleFonts.poppins(textStyle: TextStyle(color: DeliverooColors.textDark)),
+        style: GoogleFonts.poppins(textStyle: TextStyle(color: CarrefourColors.textDark)),
         obscureText: obscureText,
         validator: validator,
         onSaved: onSaved,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
       ),
     );
   }

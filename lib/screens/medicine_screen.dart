@@ -7,14 +7,15 @@ import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
 import './cart_screen.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:easy_localization/easy_localization.dart';
 
-class DeliverooColors {
-  static const Color primary = Color(0xFF00CCBC);
-  static const Color secondary = Color(0xFF2E3333);
-  static const Color background = Color(0xFFF9FAFA);
+class MedicineColors {
+  static const Color primary = Color(0xFFD9251D);
+  static const Color secondary = Color(0xFFD9B382);
+  static const Color background = Color(0xFFE0D5B7);
   static const Color textDark = Color(0xFF2E3333);
   static const Color textLight = Color(0xFF585C5C);
-  static const Color accent = Color(0xFFFF8000);
+  static const Color accent = Color(0xFFD9B382);
 }
 
 class MedicineScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _MedicineScreenState extends State<MedicineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DeliverooColors.background,
+      backgroundColor: MedicineColors.background,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
@@ -79,12 +80,12 @@ class _MedicineScreenState extends State<MedicineScreen> {
       floating: true,
       snap: true,
       elevation: 2,
-      backgroundColor: DeliverooColors.primary,
+      backgroundColor: MedicineColors.primary,
       iconTheme: IconThemeData(color: Colors.white),
       title: Text(
-        'Medicine',
-        style: GoogleFonts.poppins(
-          textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+        'medicine'.tr(),
+        style: GoogleFonts.playfairDisplay(
+          textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28),
         ),
       ),
       actions: [
@@ -103,7 +104,7 @@ class _MedicineScreenState extends State<MedicineScreen> {
                 ),
                 badgeStyle: badges.BadgeStyle(
                   shape: badges.BadgeShape.circle,
-                  badgeColor: DeliverooColors.accent,
+                  badgeColor: MedicineColors.accent,
                   padding: EdgeInsets.all(5),
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide.none,
@@ -114,7 +115,7 @@ class _MedicineScreenState extends State<MedicineScreen> {
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.shopping_basket, color: Colors.white),
+                  icon: Icon(Icons.shopping_bag_outlined, color: Colors.white),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -129,8 +130,6 @@ class _MedicineScreenState extends State<MedicineScreen> {
       ],
     );
   }
-
-  
 
   Widget _buildCategoryFilter() {
     final categories = ['All', ...Set.from(_products.map((p) => p.category))];
@@ -156,11 +155,11 @@ class _MedicineScreenState extends State<MedicineScreen> {
                     });
                   }
                 },
-                selectedColor: DeliverooColors.primary,
+                selectedColor: MedicineColors.primary,
                 backgroundColor: Colors.white,
                 labelStyle: GoogleFonts.poppins(
                   textStyle: TextStyle(
-                    color: _selectedCategory == category ? Colors.white : DeliverooColors.textDark,
+                    color: _selectedCategory == category ? Colors.white : MedicineColors.textDark,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -188,10 +187,10 @@ class _MedicineScreenState extends State<MedicineScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 child: Text(
                   category,
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: DeliverooColors.textDark,
+                    color: MedicineColors.textDark,
                   ),
                 ),
               ),
@@ -240,7 +239,7 @@ class _MedicineScreenState extends State<MedicineScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: MedicineColors.secondary.withOpacity(0.2),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -266,7 +265,7 @@ class _MedicineScreenState extends State<MedicineScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: DeliverooColors.primary.withOpacity(0.9),
+                    color: MedicineColors.primary.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -293,46 +292,57 @@ class _MedicineScreenState extends State<MedicineScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: DeliverooColors.textDark,
+                      color: MedicineColors.textDark,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                 
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                       Provider.of<CartService>(context, listen: false)
-    .addItem(product.id, product.name, product.price, product.imageUrl, product.sellerType); // Pass sellerType
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Added to cart',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: MedicineColors.accent,
+                            offset: Offset(0, 4),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Provider.of<CartService>(context, listen: false)
+                              .addItem(product.id, product.name, product.price, product.imageUrl, product.sellerType);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'added_to_cart'.tr(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              backgroundColor: MedicineColors.primary,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            backgroundColor: DeliverooColors.primary,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                          );
+                        },
+                        icon: Icon(Icons.add_shopping_cart, size: 18),
+                        label: Text('add_to_cart'.tr(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: MedicineColors.primary,
+                          side: BorderSide(color: MedicineColors.primary, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        );
-                      },
-                      icon: Icon(Icons.add_shopping_cart, size: 18),
-                      label: Text('Add to Cart', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: DeliverooColors.primary,
-                        side: BorderSide(color: DeliverooColors.primary, width: 2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.white,
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.white,
                       ),
                     ),
                   ),
@@ -350,8 +360,8 @@ class _MedicineScreenState extends State<MedicineScreen> {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           return Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
+            baseColor: MedicineColors.secondary.withOpacity(0.3),
+            highlightColor: MedicineColors.secondary.withOpacity(0.1),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
